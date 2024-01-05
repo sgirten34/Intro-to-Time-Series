@@ -1,0 +1,16 @@
+---
+title: "Seasonal ARIMA Models"
+author: "Scott Girten"
+date: "November 20, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## MA(Q)
+
+$e_t$ is a zero mean, white noise process with variance $\sigma_e^2$
+

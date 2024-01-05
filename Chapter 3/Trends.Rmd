@@ -1,0 +1,291 @@
+---
+title: "Trends"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+## Introduction
+
+Model $Y_t = \mu_t + X_t$
+
+  * $\mu_t$ = trend
+  * $X_t$ = random error
+  
+If $E(X_t) = 0$ (zero mean process), then $E(Y_t) = E(\mu_t + X_t) = \mu_t$
+
+## Common Models
+
+**Linear**
+
+Increasing/Decreasing at a constant rate.
+
+\[
+\mu_t = \beta_0 + \beta_1t
+\]
+
+**Quadratic**
+\[
+\mu_t = \beta_0 + \beta_1t + \beta_2t^2$
+\]
+
+......and so on for higher order models
+
+**Cycles**
+
+Use sin and cos functions to model trends with periodicity
+
+$\mu_t = \beta_0 + \sum(\alpha; cos\omega; t + \beta_jsin\omega_j; t)$
+
+
+Another way to remove a trend is a method called differencing.  This is simply taking differences such as:
+
+$Y_t - Y_{t-1}$
+
+
+Consider $Y_t = \mu + X_t$.  The trend is the constant $\mu$.  Often $\bar{Y} = \frac{1}{n}\sum_{i=1}^n Y_i$ is an estimator for $\mu$. 
+
+*Formula 2.2.7 in the book*
+
+$Var(\bar{Y}) = Var(\frac{1}{n}y_1 + \frac{1}{n}y_2 + ... + \frac{1}{n}y_n)$
+$Var(\bar{Y}) = \frac{1}{n^2}\sum_{t=1}^n Var(Y_i) + 2\sum_{t=2}^n\sum_{j=1}^{t-1} c_tc_j\gamma_{t,j}$
+
+$= \frac{1}{n^2}[n\gamma_o] + \frac{2}{n^2}[\gamma_{2,1} + \gamma_{3,1} + \gamma_{3,2} + \gamma_{4,1} + \gamma_{4,2} + \gamma_{4,3} +... + \gamma_{n,n-1}]$
+
+*Note:* $\gamma_o = Var(Y_t)$
+      $\gamma_{t,t}= \gamma_{j,j} = \gamma_{o}$
+      
+
+## In Class Code Excercises
+
+```{r exercise_1}
+library(tidyverse)
+library(TSA)
+data(rwalk)
+plot(rwalk, type = "o")
+
+model1 = lm(rwalk~time(rwalk))
+summary(model1)
+
+plot(y=rstudent(model1), x=as.vector(time(rwalk)), type="o")
+acf(rstudent(model1))
+
+```
+
+
+
+```{r excercise_2}
+
+# Dubuque, Iowa Temperature Data
+data(tempdub)
+modeldub=lm(tempdub~time(tempdub))
+summary(modeldub)
+plot(y=rstudent(modeldub), x=as.vector(time((tempdub))), type="o")
+acf(rstudent(modeldub))
+acf(tempdub) # notice the pattern 12 time periods apart
+
+# Seasonal Means Model
+month.=season(tempdub) # period added to help table display
+model2 = lm(tempdub~month.-1) # The -1 removes the intercept
+summary(model2)
+acf(rstudent(model2))
+
+# Alternative Fit
+model3=lm(tempdub~month.) # January is automatically dropped
+summary(model3)
+acf(rstudent(model3))
+
+```
+
+
+For a series $Y_1, Y_2, Y_3, ..., Y_n$:
+
+> $Y_t = \mu_t + X_t$
+
+$\mu_t \rightarrow$ find model that will ignore this term
+
+$X_t \rightarrow$ this is the variable we would like to model
+
+## What is Independence?
+
+Rolling dice example in class
+
+### Stationary Process
+
+Expected Value of Rolling Dice
+
+\[
+\begin{eqnarray}
+E(Y_t) & = & E(r_1 + r_2 + ... + r_t)\\
+& = & 4.5t\\
+u_t & = & Y_1 - Y_2\\
+& = & r_t
+\end{eqnarray}
+\]
+
+Look at differences instead of the expected value
+
+```{r dice_rolling_example}
+
+Roll = c(3, 4, 5, 6, 3, 1, 7, 8, 6, 2, 5, 2, 7, 1, 5, 3, 2, 5, 3, 2, 4, 1, 4, 2, 1)
+timeIndex = c(1:25)
+
+diceData = tibble(timeIndex, Roll)
+
+dicePlot = ggplot(diceData, aes(x = timeIndex, y = Roll)) + 
+  geom_point() + 
+  geom_line() + 
+  geom_hline(yintercept =  4.5, linetype = "dashed", color = "blue") +
+  ggtitle("8-Sided Die Rolls")
+
+plot(dicePlot)
+
+```
+
+```{r runs_test}
+library(TSA)
+library(kableExtra)
+
+# List of values after rolling dice 25 times
+Roll = c(3, 4, 5, 6, 3, 1, 7, 8, 6, 2, 5, 2, 7, 1, 5, 3, 2, 5, 3, 2, 4, 1, 4, 2, 1)
+
+# Force to a data frame to allow as input to kable
+runsTest = as.data.frame(runs(Roll, k = 4.5))
+
+# Create a table of the output
+kable(runsTest) %>% 
+  kable_styling(full_width = F) %>% 
+  add_header_above(header = c("Runs Test" = 6))
+  
+
+
+```
+
+Consider the random walk from TSA package (Expected Value is 0)
+
+```{r runsTest_randomWalk}
+library(TSA)
+
+data(rwalk)
+win.graph(12,7,14)
+plot.ts(rwalk, type="o")
+abline(h=0, col="blue")
+
+runs(rwalk)
+
+```
+
+## Periodic Functions
+
+$\mu_t \rightarrow$ periodic function
+
+$Y_t = \mu_t + X_t = \beta cos(2\pi ft + \Theta$
+
+$\beta \rightarrow$ amplitude *($\mu_t$ oscillates between $-\beta$ and $\beta$)*
+
+$f \rightarrow$ frequency *($\frac{1}{f}$ is the period)*
+
+$\Theta \rightarrow$ phase shift
+
+### Trigonometry Review
+
+$cos(a + b) = cos(a) + cos(b) - sin(a) + sin(b)$
+
+$\beta cos(2\pi ft + \Theta = \beta[cos(2\pi ft)cos(\Theta) - \beta\sin(2\pi ft)\sin(\Theta)]$
+
+The only random variable in the above equation is $t$. Combining $\beta$ and $cos(\Theta)$:
+
+$\beta_1cos(2\pi ft) - \beta_2sin(2\pi ft)$
+
+$\beta_1 = \beta cos(\Theta)$
+
+$\beta_1 = \frac{\beta}{cos(\Theta)}$
+
+
+$\beta_2 = -\beta sin(\Theta)$
+
+$\beta_2 = \frac{-\beta}{sin(\Theta)}$
+
+Given these two betas:
+
+$\frac{\beta_1}{cos(\Theta)} = \frac{-\beta}{sin(\Theta)}$
+
+$\frac{sin(\Theta)}{cos(\Theta)} = \frac{-\beta_2}{\beta_1}$
+
+$tan(\Theta) =  \frac{-\beta_2}{\beta_1}$
+
+$\Theta = tan^{-1}(\frac{-\beta_2}{\beta_1})$
+
+### Example
+
+Cosine Example from Canvas
+
+```{r cos_example}
+library(TSA)
+data("tempdub")
+
+har.=harmonic(tempdub,1)
+model4tempcos=lm(tempdub~har.)
+summary(model4tempcos)
+
+```
+
+Raw data plotted
+
+```{r cos_example_contd}
+plot(tempdub, type="o")
+
+#plot(ts(fitted(model4tempcos),freq=12,start=c(1964,1)),ylab='Temperatur',type='l',ylim=range(c(fitted(model4tempcos),tempdub)));
+#points(tempdub)
+
+```
+
+Data fitted to the model.  Notice the data points at the bottom of the chart (low temperatures) are not accounted for by the model.
+
+```{r cos_example_continued}
+plot(ts(fitted(model4tempcos),freq=12,start=c(1964,1)),ylab='Temperatur',type='l',ylim=range(c(fitted(model4tempcos),tempdub)));
+points(tempdub)
+
+```
+
+## Moving Average Process
+
+**MA(2) Process**
+
+$Y_t = e_t - \Theta_1e_{t-1} - \Theta_2e_{t-2}$
+
+e's are a white noise process
+
+> E($e_i$) = 0  *zero mean*
+>
+> Var($e_i$) = $\sigma_{\epsilon}^2$
+
+
+$E(Y_t) = E[e_t - \Theta_1e_{t-1} - \Theta_2e_{t-2$
+
+$= 0 + 0 + 0$
+
+$\gamma_o = var(Y_t) = \sigma_{\epsilon}^2[1 + \Theta_1^2 + \Theta_2^2]$
+
+**Look in notes**
+
+```{r}
+library(TSA)
+
+win.graph(width = 5, height = 3, pointsize = 14)
+data("ma2.s")
+plot(ma2.s, ylab = expression("[Yt]"), type = "o")
+
+```
+
+

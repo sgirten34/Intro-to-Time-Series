@@ -1,0 +1,370 @@
+---
+title: "Foundational Material"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Univariate Random Variables
+
+A **random variable** Y is a variable whose value cannot be predicted with certainty. You might know
+different values it can take on, along with the probability it takes on certain ranges of values, but you can't know which value will actually occur. So the variable has a **probability distribution** associated with it. A **continuous** random variable has positive probabilities assigned to intervals of possible values (no probability at a single point, but rather a function defines a pdf (probability density function). We will treat our random variables only as continuous for this course.
+
+**Definition:**  The cumulative distribution function (cdf) of a random variable Y, which we denote as Fy(y), is a function that gives the probability $F_Y$(y) = P(Y $\leq$ y), for all values $-\infty$ < y <  $\infty$ 
+
+Mathematically, a random variable Y is said to be **continuous** if its cdf is a continuous function of y.
+
+Suppose Y is a continuous random variable (rv) with cdf $F_Y$(y). Then the probability density function (or pdf) of Y, denoted $f_Y$(y) is given by taking the derivative of the cdf. 
+
+In other words, $f_Y(y) = \frac{d}{dY}F_Y(y)$, provided the derivative exists.
+
+### Properties
+
+Let Y be a continuous rv with pdf fY(y) and support R (So set R is just the values Y can take on).  Then we know two things:
+
+1. $f_Y(y) \geq 0$ on R
+
+2. The function $f_Y(y)$ integrates to $1 = \int_{R}f_Y(y)dY$  
+
+
+Further, P(a < Y < b) = $\int_{a}^b f_Y(y)dy = F_Y(b) - F_Y(a)$
+
+
+**Definition:** Let Y be a continuous rv with pdf $f_Y$(y) and support R. We say the expected value (or mean) of Y is given by $E(Y) = \int_{R} yf_Y(y)dY$.  This is like  a "weighted average" of values of y times the "probability" it takes on that value. 
+
+*Note:* From calculus, $E(Y)$ will exist as long as $\int_{R} \lvert y\rvert f_Y(y)dy < \infty$ (ie: this integral is finite). If the integral is not finite, then we say E(Y) does not exist. (The Cauchy distribution is one example where this fails).
+
+
+Next, we let g be a real-valued function. Then $g(Y)$ is a random variable and we say the expected
+value of the function is given as $E(g(Y)) = \int_{R}g(y)f_Y(y)dY)$ provided the integral exists.
+
+This provides a foundation from which we build further concepts. We likely will use little of what is
+given above directly, but the implications of these results will be used as we look at series. 
+
+
+### Expectations
+
+
+ Let Y be a random variable with pdf $f_Y(y)$ and support R,
+suppose that $g, g_1, g_2, ..., g_k$ are real-valued functions, and let a be any real constant. Then
+
+1. $E(a) = a$
+
+2. $E[ag(Y)] = aE[g(Y)]$
+
+3. $E[\sum_{i=1}^{k} g_i(Y)] = \sum_{i=1}^{k}E[g_i(Y)]$
+
+**Definition:** Let Y be a random variable with pdf$f_Y(y)$, support R and mean $E(Y) = \mu$.  The variance of Y is $Var(Y) = E[(Y-\mu)^2] = \int_{R}(y-\mu)^2f_Y(y)dy$ or equivalently $E(Y^2)-[E(Y)]^2$.  We will use $\sigma^2$ or $\sigma_Y^2$ to denote $Var(Y)$.
+
+  * If $Var(Y) = 0$, then all the probability is at a single value, or Y is really a constant. So $var(Y) \geq 0$, with our interest in the non-equality situations.
+  
+  * The larger $Var(Y)$ is, the more spread exists in the values of Y about the mean $\mu=E(Y)$.  Also the smaller $Var(Y)$ is, the less spread exists in the values of Y about $\mu$.
+  
+  * Notice that $Var(Y)$ is in squared units.  Typically, the variance is calculated and then a square root is taken of that result.  The **standard deviation** of Y is $\sigma = \sqrt{\sigma^2} = \sqrt{var(Y)}$ which is in original units instead of squared units.
+  
+Another useful result is that for a rv Y with constants a and b, $Var(a + bY) = b^2 Var(Y)$
+
+***
+
+## Bivariate Random Variables
+
+Although we could write out several results of bivariate random vectors (two random variables and
+how they relate), we will restrict our focus to general terminology needed for now. Many concepts
+from the univariate case extend, for example the total probability is 1, so a double integral over the
+joint probability function of two random variables evaluates to 1. Any probability you seek would be
+found by evaluating the double integral over the subspace of interest. The properties of expectation
+extend naturally with the justifications being the natural extension of the arguments given for the
+univariate case. 
+
+**Definition:** Suppose that X and Y are random variables with means $E(X) = \mu_x$ and $E(Y) = \mu_y$, respectively.  The **covariance** between X and Y is:
+
+
+$cov(X, Y) = E[(X-\mu_X)(Y-\mu_Y)] = E(XY) - E(X)E(Y)$
+
+
+The latter expression is called the covariance computing formula. The covariance is
+a numerical measure that describes how two variables are linearly related.
+
+  * If cov(X, Y ) > 0, then X and Y are positively linearly related.
+  * If cov(X, Y ) < 0, then X and Y are negatively linearly related.
+  * If cov(X, Y ) = 0, then X and Y are not linearly related.
+
+*Note:*  If X and Y are independent, then cov(X, Y) = 0. The converse is **not necessarily true.**
+
+Let X and Y be random variables. Then:
+
+  * $Var(X + Y) = Var(X) + Var(Y) + 2cov(X,Y)$
+  * $Var(X - Y) = Var(X) + Var(Y) - 2cov(x,Y)$
+
+If X and Y were independent, then the cov(X,Y) = 0 and the results above drop the last term. 
+
+Let cov() act as an operator on two random variables, X and Y. Notice
+
+  1. $cov(X,Y) = cov(Y,X)$  *The order of X and Y does not matter*
+  2. $cov(X,X) = var(X)$  *The covariance of a random variable itself is the variance of the random variable*
+  3. $cov(a + bX, c + dY) = bdcov(X,Y)$
+  
+**Definition:** Suppose that X and Y are random variables.  The **correlation** between X and Y is $\rho = corr(X,Y) = \frac{cov(X,Y)}{\sqrt{var(X)var(Y)}}$.
+
+Four implications for this scaled result:
+
+  * $-1 \leq \rho \leq 1$  
+  * If $\rho = 1$, then $Y = \beta_0 + \beta_1X_1$ for $\beta_1 > 0$.  So Y is modeled exactly, without error, based on X via a straight line.  This is deterministic model where the line has a positive slope.
+  * If $\rho = -1$, then $Y = \beta_0 + \beta_1X_1$ for $\beta_1 < 0$.  So Y is modeled exactly, without error, based on X via a straight line.  This is deterministic model where the line has a negative slope.
+  * If $\rho = 0$, then X and Y are not linearly related.
+
+
+If X and Y are independent, then $\rho = \rho_{XY} = 0$.  The converse is not true in general.  Howerver, $\rho = corr(X,Y) = 0$ does imply that X and Y are independent when (X, Y) has a **bivariate normal distribution.**
+
+***
+
+## Multivariate Random Variables
+
+Finally, let's consider the general case with more than two random variables. Again, we will not write
+out all details, such as the cdf for the vector of random variables, but rather focus on the natural
+extensions to higher dimensions. 
+
+**Definition:**  Let $Y_1, Y_2, ..., Y_n$ be random variables with $a_1, a_2, ..., a_n$ being constants. Then $U = a_1Y_1 + a_2Y_2 + ... + a_nY_n$ is called a linear combination of random variables $Y_1, Y_2, ..., Y_n$.
+
+Notice in a time series, you will study linear combinations.
+
+**Expected Value:** $E(U) = E(a_1Y_1 + a_2Y_2 + ... + a_nY_n)$  
+
+**Variance** $Var(U) = Var(a_1Y_1 + a_2Y_2, ... + a_nY_n)$
+
+  $= a_1^2var(Y_1) + a_2^2var(Y_2) + ... + a_n^2var(Y_n)$
+ 
+  $= \sum_{i=1}^n a_i^2var(Y_i) + 2\sum_{i=j} a_ia_j cov(Y_i,Y_j)$
+
+***
+
+## Definitions
+
+**Stochastic Process:** a sequence of random variables
+
+  * consider a sequence of random variables $Y_{-2}, Y_{-1}, Y_0, Y_1, Y_2,...$
+  
+**Mean function:** $E[Y_t] = \mu_t$ for $t = 0, \pm1, \pm2, ...$
+
+  * each mean can differ
+  
+**Autocovariance function:** $\gamma_{t,s} = cov(Y_t, Y_s)$ for $t = 0, \pm1,...$
+
+**Autocorrelation function:** $\rho_{t,s} = cor(Y_t, Y_s)$ for $t,s = 0, \pm1, \pm2, ...$
+
+***
+
+## Processes
+
+### Random Walk
+
+Let $e_1, e_2, e_3, ...$ be a sequence of **identically distributed** and **independent** random variables with a mean of 0 and constant (but unknown) variance $\sigma_e^2$
+
+Define the time series as:
+
+> $Y_1 = e_1 \rightarrow Y_1 = e_1$
+>
+> $Y_2 = e_1 + e_2 \rightarrow Y_2 = e_1 + e_2$
+>
+> $Y_3 =  e_1 + e_2 + e_3 \rightarrow Y_3 =  e_1 + e_2 + e_3$
+>
+>
+>
+> $Y_t =  e_t + e_t + e_t \rightarrow Y_t =  e_t + e_t + e_t$
+
+$Y_1 = e_1$ is the initial condition and $Y_t = Y_{t-1} + e_t$ for $t > 1$
+
+What is the mean for $Y_t$?
+
+> $\mu_t = E(Y_t)$
+>
+> $\mu_t = E(e_1, e_2, ..., e_t)$
+>
+> $\mu_t = E(e_1) + E(e_2) + ... + E(e_t)$
+>
+> $\mu_t = 0 + 0 + 0$
+>
+> $\mu_t E(Y_t) = 0$ for all $t = 1, 2, ...$
+>
+> *identically distributed with mean  = 0*
+
+What is variance of $Y_t$?
+
+> $Var(Y_t) = Var(e_1 + e_2 + ... + e_t)$
+>
+> $Var(Y_t) = var(e_1) + var(e_2) + ... + var(e_t)$
+>
+> $Var(Y_t) = \sigma_e^2 + \sigma_e^2 + ... + \sigma_e^2$
+>
+> $Var(Y_t) = t \sigma_e^2$    *(Increasing linearly with t)*
+      
+What is the covariance of Y_t?
+
+> $\gamma_{t,s} = cov(Y_t, Y_s)$ for $1 \leq t \leq s$
+>
+> $\gamma_{t,s} = cov(e_1 + e_2 + ... + e_t, e_1 +1 e_2 + ... + e_t + e_{t+1} + ... + e_s)$
+>
+> $\gamma_{t,s} = \sum_{i=1}^s \sum_{j=1}^t cov(e_i, e_j)$
+        
+but the $cov(e_i, e_j) = 0$ if:
+
+  * $i \neq j$ and
+  * $\sigma_e^2$ if $i = j$
+$= \sum_{i=1}^t \sigma_e^2 = t\sigma_e^2$
+
+**Autocorrelation function:**
+
+> $\rho_{t,s} = \sqrt{\frac{t}{s}}$ 
+
+**Position in the sequence**
+
+Early ($t = 1, s = 2$)
+
+> $\rho_{t,s} = \sqrt{\frac{1}{2}} \approx 0.71$
+
+A little later, but still adjacent observations ($t = 8, s = 9$):
+
+> $\rho_{8,9} = \sqrt{\frac{8}{9}} \approx 0.94$
+
+A little later ($t = 24, s = 25$):
+
+> $\rho_{24, 25} = \sqrt{\frac{24}{25}} \approx 0.98$
+
+the $\lim$ of $\sqrt{\frac{t}{t+1}} \rightarrow 1$
+
+What about points which are not adjacent in time ($t = 1, s = 25$)? 
+
+> $\rho_{1, 25} = \sqrt{\frac{1}{25}} = \frac{1}{5} = 0.2$
+
+### White Noise
+
+Let $e_1, e_2, ...$ be a sequence of independent, identically distributed random variables. Notice we are not stating the mean is 0, here, though subtracting a constant mean could create a zero-mean
+process. Notice that:
+
+  * $\mu_t = E[e_t]$ is constant
+  * $\gamma_{t,s} = cov(e_t, e_s) = \begin{cases} \sigma_e^2 \text{ if t = s} \\
+                                              \text{0 if t } \neq \text{ s} \\
+                                              \end{cases}$
+  * $\rho_{t,s} = corr(e_t, e_s) = \begin{cases} \text{1 if t = s} \\
+                                            \text{0 if t } \neq \text{ s}\\
+                                            \end{cases}$
+
+This is not seemingly interesting. However, many times in modeling, you have a model comprised of
+**systematic variation** (trends, seasonal components, etc.) and **random variation** (background
+noise). As a data analyst, you would like to model the systematic part, leaving the leftover as
+something that looks like a white noise process. So a white noise component can be helpful.
+
+### Moving Average
+
+Let $Y_t$ be defined by $Y_t = \frac{e_t + e_{t-1}}{2}$ where e's are iid with mean = 0 and constant variance $\sigma_e^2$.
+
+**Mean:** $\mu_t = E[Y_t] = E[\frac{e_t + e_{t-1}}{2}]^2 = \frac{E[e_t] + E[e_{t-1}]}{2} = \frac{0 + 0}{2} = 0$
+
+**Variance:** Var($V_t$) = $Var[\frac{e_t + e_{t-1}}{2}] = \frac{Var[e_t] + Var[e_{t-1}]}{4} = \frac{\sigma_e^2 + \sigma_e^2}{4} = \frac{\sigma_e^2}{2}$
+
+**Covariance:** $\gamma_{t,t-1} = Cov(Y_t, Y_{t-1} = Cov[\frac{e_t + e_{t-1}}{2}, \frac{e_{t-1} + e_{t-2}}{2}] = ..... = \frac{\sigma_e^2}{4}$ for all t.
+
+Also, $\gamma_{t,t-2} = Cov(T_t,Y_{t-2}) = 0$ for all t.  Similarly, the covariance will be 0 if values are further apart.
+
+> $\gamma_{t,s} = \begin{cases} \frac{\sigma_e^2}{2} \text{for t = s} \\
+                              \frac{\sigma_e^2}{4} \text{for } \lvert\text{t - s}\rvert\text{ = 1} \\
+                              \text{0 for }\lvert\text{t - s}\rvert \text{ > 1} \\
+                              \end{cases}$
+
+and the autocorrelation function:
+
+> $\rho_{t,s} = \begin{cases} \text{1 for t = s} \\
+                            \text{0.5 for }\lvert\text{t - s}\rvert\text{ = 1} \\
+                            \text{0 for }\lvert\text{t - s}\rvert\text{ > 1} \\
+                            \end{cases}$
+
+Notice in this example, the covariance/correlation depends only on *how far apart* observations are in
+time, but not how far into the sequence the value is located. Values one time unit apart, |t-s|=1 have
+the same correlation, no matter where they occur in the sequence. Also, values which are 2 or more
+time units apart are uncorrelated (again, all the same).
+
+From these examples, consider the concept of stationarity (and weak stationarity).
+
+***
+
+## Stationarity
+
+We say a process is stationary if the probability laws which govern the process do not change over
+time (are not dependent on the value of t). Consider the following definitions.
+
+A process $Y_t$ is **strictly stationary** if the joint distribution of any set of random variables is the same as any set of random variables k units away. Mathematically, we can write this as follows:
+
+**For n = 1**  this means $Y_t$ must have the same distribution as $Y_{t-k}$. So the Y's are identically distributed. Notice $E(Y_t) = E(Y_{t-k})$ for all t and k, which implies the mean is constant across time. Also, $Var(Y_t) = Var(Y_{t-k})$ for all t and k, and again, this implies constant variance. 
+
+**What is n = 2?**
+This implies $(Y_t, Y_s)$ and $(Y_{t-k}, Y_{s-k})$ have the same **joint distribution** for all t, s, and k.
+
+  * Because these joint distributions are the same, $Cov(Y_t, Y_s) = Cov(Y_{t-k}, Y_{s-k})$, for all t, s, and k.
+  * Notice for a strictly stationary process, we let k = s, and then see
+  
+> $\gamma_{t,s} = Cov(Y_t,Y_s) = Cov(Y_{t-s},Y_{s-s=0}) = Cov(Y_o,Y_{t-s})$
+
+But, also, for k = t, we have $Cov(Y_t, Y_s) = Cov(Y_0, Y_{s-t})$ from the same reasoning.
+Putting the last two results together, we have
+
+> $\gamma_{t,s} = Cov(Y_t, Y_s) = Cov(Y_o, Y_{\lvert t - s\rvert}) = Y_{0, \lvert t-s \rvert}$
+
+This means that the covariance between $Y_t$ and $Y_s$ does not depend on the actual values of t and s, it only depends on the time difference $\lvert\text{t-s}\rvert$.
+
+**Definition:** $\gamma_k = Cov(Y_t, Y_{t-k})$ and $\rho_k = Corr(Y_t,Y_{t-k})$ where $k = \lvert t-s \rvert$ is the lag, or number of times points between $Y_t$ and $Y_s$.
+
+*Note: Use this notation when a process is stationary.*
+
+Notice that for k = 0, $\gamma_o = Cov(Y_t,Y_t) = Var(Y_t)$. Also,$\rho_k = Corr(Y_t, Y_{t-k}) = \frac{\gamma_k}{\gamma_o}$
+
+For a process which is **(strictly) stationary**, we know two important characeteristics:
+
+  * The mean function $\mu_t = E(Y_t)$ is **constant** throughout time: $\mu_t$ is free of t.
+  * The covariance between any two observations **depends only the time lag** between them 
+    + $\gamma_{t,t-k}$ depends only on k (not on t).
+  
+To formally check strict stationarity is difficult in many cases (checking any sub-list for equal
+probability distributions). We will have a lighter version of stationarity, not requiring as rigorous a condition but the two components above, yet this still works in practice.
+
+**Definition:** A stochastic process $Y_t$ is **weakly stationary** (or **second-order stationary**) if:
+
+  * The mean function $\mu_t = E(Y_t)$ is constant throughout time; $\mu_t$ is free of t.
+  * The covariance between any two observations depends only the time lag between them
+    + $\gamma_{t,t-k}$ depends only on k (not on t).
+  
+Notice we are not making statements about joint distributions, but only characteristics of the first two moments of the process.
+
+***
+
+Let's revisit our processes and see if they are (or aren't) weakly stationary!
+
+**Random Walk:**  Recall $\mu_t = 0$  for all t, so the first condition holds.  However, $cov(Y_t, Y_{t-k} = (t-k)\sigma_e^2$.  This depends on t.  So a random walk is **NOT** weakly stattionary.
+  
+**White Noise:** The mean was found to be $\mu_t = E[e_t]$, which is constant and free of t.  Also, 
+
+> $\gamma_{t,s} = Cov(e_t, e_s) = \begin{cases} \sigma_e^2 \text{ if t = s} \\ 
+                                              \text{0 if t }\neq\text{ s} \\
+                                              \end{cases}$
+                                              
+or simply $\gamma_k = Cov(Y_t, Y_{t-k})$ only depends on the distance between t and s which is how k is defined.  So a white noise process **IS** weakly stationary.
+                                              
+**Moving Average Process:** the mean was $\gamma_t = E[Y_t] = E[\frac{e_t + e_{t-1}}{2} = \frac{0 + 0}{2} = 0$, so the first condition is met.  But what about the second condition?  Recall that 
+
+> $\gamma_{t,s} = \begin{cases} \frac{\sigma_e^2}{2} \text{for t = s} \\
+                              \frac{\sigma_e^2}{4} \text{for }\lvert\text{t - s}\rvert\text{ = 1} \\
+                              \text{0 for }\lvert\text{t - s}\rvert\text{ > 1} \\ 
+                              \end{cases}$
+                              
+Since $Cov(Y_t, Y_{t-k})$ does not depend on t, this moving average process **IS** weakly stationary.
+                                              
+
+
+
+

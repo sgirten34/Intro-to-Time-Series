@@ -1,0 +1,213 @@
+---
+title: "Monthly US Candy Production"
+author: "Scott Girten"
+date: "November 25, 2019"
+output: 
+  html_document:
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+
+This dataset if from Kaggle and it contains the industrial production index of US candy production from January 1972 to August 2017.  The industrial production index is calculated by the St. Louis Federal Reserve.
+
+```{r read_data}
+library(tidyverse)
+library(forecast)
+library(TSA)
+# Read in data
+candy_data = read_csv("candy_production.csv") %>% 
+  rename(INDPRO = IPG3113N) %>% 
+  rename(Date = observation_date)
+
+candy_data_test = slice(candy_data, 539:548)
+
+# Convert to time series object
+candy_data_ts = ts(candy_data$INDPRO , start = c(1972,1), end = c(2017,8), frequency = 12)
+
+autoplot(candy_data_ts) + 
+  ylab("Industrial Production Index") + 
+  ggtitle("US Candy Industrial Production Index from 1972 to 2017")
+
+ggAcf(candy_data_ts) +
+  ggtitle("ACF of INDPRO")
+
+ggPacf(candy_data_ts) +
+  ggtitle("PACF of INDPRO")
+
+eacf(candy_data_ts)
+```
+
+The initial plot of the raw data shows a seasonal pattern with an increasing trend from 1972 to 2005, then a drop from 2005 to 2010 with slight upward trend after 2010.  The ACF shows a seasonal pattern with the a lag of 12 and the PACF shows the first 4 lags possibly being significant.  First, I need to eliminate the trend, so I will take a first difference  and see what the plots look like.
+
+```{r diff_data}
+# Difference the original data
+candy_ts_diff = diff(candy_data_ts)
+
+autoplot(candy_ts_diff) + 
+  ylab("Industrial Production Index") + 
+  ggtitle("US Candy Industrial Production Index from 1972 to 2017 (Differenced)")
+
+ggAcf(candy_ts_diff) +
+  ggtitle("ACF of INDPRO (Differenced)")
+
+ggPacf(candy_ts_diff) +
+  ggtitle("PACF of INDPRO (Differenced)")
+
+eacf(candy_ts_diff)
+
+```
+
+The differenced plot and the ACF both show a seasonality of 12, so I will take a difference of 12 to remove the seasonality.
+
+```{r diff_after_lag}
+#Take difference of 12 on the differenced data
+candy_ts_diff2 = diff(candy_ts_diff, lag = 12)
+
+autoplot(candy_ts_diff2) + 
+  ylab("Industrial Production Index") + 
+  ggtitle("US Candy Industrial Production Index from 1972 to 2017 (Lag 12)")
+
+ggAcf(candy_ts_diff2) +
+  ggtitle("ACF of INDPRO (Lag 12)")
+
+ggPacf(candy_ts_diff2) +
+  ggtitle("PACF of INDPRO (Lag 12)")
+
+eacf(candy_ts_diff2)
+
+```
+The plot of the series differenced at 1 and at 12 seems to resemble a stationary process.  The ACF shows the first 2 terms of the MA component to be significant as well as the 12 month lag.  The PACF shows the first 2 terms of the AR component are significant and the 12 month and 24 month lags are significant.  So the model that might be a good starting point to try is ARIMA(2,1,2)x(1,0,1) lag(12)
+
+
+Fit the model
+```{r model_fit}
+candy_model = arima(candy_data_ts, order = c(2, 1, 2), seasonal = list(order = c(1, 0, 1), period = 12))
+candy_model
+
+```
+The ma1 term is not significant, so I'll remove that component and rerun the model.
+
+```{r}
+candy_model = arima(candy_data_ts, order = c(2, 1, 1), seasonal = list(order = c(1, 0, 1), period = 12))
+candy_model
+```
+Again, the ma1 component is not significant and I will remove it from the model.
+
+```{r}
+candy_model = arima(candy_data_ts, order = c(2, 1, 0), seasonal = list(order = c(1, 0, 1), period = 12))
+candy_model
+```
+
+
+The model terms are all significant, seems like a good model.  I'll overfit all 4 possibilities to confirm this is an appropriate model.
+
+```{r overfit}
+#Over fit non seasonal
+candy_model2 = arima(candy_data_ts, order = c(3, 1, 0), seasonal = list(order = c(1, 0, 1), period = 12))
+candy_model2
+
+candy_model3 = arima(candy_data_ts, order = c(2, 1, 1), seasonal = list(order = c(1, 0, 1), period = 12))
+candy_model3
+
+#Over fit seasonal
+candy_model4 = arima(candy_data_ts, order = c(2, 1, 0), seasonal = list(order = c(2, 0, 1), period = 12))
+candy_model4
+
+candy_model5 = arima(candy_data_ts, order = c(2, 1, 0), seasonal = list(order = c(1, 0, 2), period = 12))
+candy_model5
+
+
+```
+
+The last model with two seasonal moving averages has all significant terms and a slightly lower variance than my original model.  I will overfit that model to see if there are any other possibilities.
+
+```{r}
+candy_model6 = arima(candy_data_ts, order = c(3, 1, 0), seasonal = list(order = c(1, 0, 2), period = 12))
+candy_model6
+
+candy_model7 = arima(candy_data_ts, order = c(2, 1, 1), seasonal = list(order = c(1, 0, 2), period = 12))
+candy_model7
+
+candy_model8 = arima(candy_data_ts, order = c(2, 1, 0), seasonal = list(order = c(2, 0, 2), period = 12))
+candy_model8
+
+candy_model9 = arima(candy_data_ts, order = c(2, 1, 0), seasonal = list(order = c(1, 0, 3), period = 12))
+candy_model9
+```
+All of the overfit models have at least one insignificant term, so I that model might an appropriate model for the series.
+
+```{r residual_analysis}
+resid = rstandard(candy_model5)
+autoplot(resid) +
+  geom_point() + 
+  ggtitle("Plot of the Residuals")
+
+hist_plot = ggplot(resid, aes(x = resid)) + 
+  geom_histogram() + 
+  ggtitle("Histogram of the Residuals")
+plot(hist_plot)
+
+qq_plot = ggplot(resid, aes(sample = resid)) + 
+  geom_qq() + 
+  geom_qq_line() + 
+  ggtitle("QQ Plot of the Residuals")
+plot(qq_plot)
+
+```
+
+There are a couple outliers in my data.  I'm not sure why there are outliers in my dataset, but the rest of the residuals look good.  The plot of the residuals appears to show a constant variance centered around 0, the histogram is symmetrical and mounded at 0 and the QQ plot appears to show a reasonably normal distribution.  Other than the two outliers, there does not appear to be evidence to reject the assumption of normality for the residuals.  
+
+The next 10 predicted values
+```{r forecast}
+library(kableExtra)
+# I tried to get this plot to look nice
+candy_data_predict = slice(candy_data, 1:538)
+#I trained my model on the full data set, otherwise I had some very large outliers in the data.  Not sure why but it produced strange results.  So I removed the last ten observations, will rerun the model then run a prediction
+candy_data_predict_ts = ts(candy_data_predict$INDPRO , start = c(1972,1), end = c(2016, 10), frequency = 12)
+candy_model_final = arima(candy_data_predict_ts, order = c(2, 1, 0), seasonal = list(order = c(1, 0, 2), period = 12))
+
+
+my_forecast = predict(candy_model_final, n.ahead = 10)
+plot(candy_model, n.ahead = 10)
+points(my_forecast$pred, col = "blue")
+
+forecast_errors = tibble(Observed = candy_data_test$INDPRO,
+                         Forecast = my_forecast$pred) %>% 
+  mutate(SSE = (Forecast - Observed)^2)
+
+total_error = sum(forecast_errors$SSE)
+
+kable(forecast_errors) %>% 
+  kable_styling()
+
+#my_forecast2 = forecast(candy_model$model)
+#autoplot(forecast(candy_model))
+# Date = candy_data_test$Date
+# INDPRO = my_forecast$pred
+# SE = my_forecast$se
+# predict_values = tibble(Date, INDPRO, SE)
+# 
+# predict_plot = candy_data_train %>% 
+#   bind_rows(predict_values) +
+#   ggplot(predict_plot, aes(x = Date, y = INDPRO)) +
+#   geom_point() + 
+#   geom_line()
+# plot(predict_plot)
+  
+
+```
+
+The table above shows the error for each prediction made.  The total sum of squares error for the prediction is `r total_error`.
+
+
+***
+
+

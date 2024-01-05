@@ -1,0 +1,269 @@
+---
+title: "Method of Moments & Least Squares Estimation"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE,
+	fig.align = "center"
+)
+```
+
+## Notes from Handout (MoM)
+
+
+## Least Squares Estimation
+
+$Y_t - \mu = \phi(Y_t-\mu) + e_t$
+
+Differences: $Y_t - \mu = \phi(Y_t-\mu)$
+
+This is a function of $\phi$ and $\mu$ (parameters you're trying to estimate).
+
+$S(\phi, \mu) = \sum_{t-2}^n [(Y_t - \mu) - \phi(Y_{t-1} - \mu)]^2$
+
+To minimize sum of squares, take partial derivatives with respect to each term.
+
+Equations 7.2.. in the book for how to do the differentiation and derive the general formula
+
+
+### MA(1)
+
+$Y_t = e_t - \theta e_{t-1}$
+
+$Y_t = e_t - \theta Y_{t-1} - \theta^2 Y_{t-2} - \theta^3 Y_{t-3} - ...$
+
+Minimize the series $\theta Y_{t-1} - \theta^2 Y_{t-2} - \theta^3 Y_{t-3} - ...$
+
+
+**Homework Question 1**
+
+Colton's question about characteristic equations
+$\phi (x)  = 1 - \phi \beta x$
+
+$AB \rightarrow (1 - \phi_1 \beta)Y_t$
+
+$Diff \rightarrow Y_t - T_{t-1}$ or written as $[1 - \beta]Y_t$
+
+Second difference
+
+$(1-\beta)(Y_t - Y_{t-1})$
+
+$Y_t - T_{t-1} - Y_{t-1} + Y_{t-2}$
+
+$Y_t - 2Y_{t-1} + Y_{t-2}$
+
+$[1 - 2\beta + \beta^2]$
+
+$(1 - \beta)^2Y_t$
+
+**Example ARIMA(1,1,1)**
+
+$[1 - 0.6\beta](1-\beta)Y_t = (1 - 0.4\beta)e_t$
+
+$(1 - 0.6\beta)[Y_t - Y_{t-1}] = e_t - 0.4e_{t-1}$
+
+$Y_t - 0.6Y_{t-1} - Y_{t-1} + 0.6Y_{t-2} = e_t - 0.4e_{t-1}$
+
+$Y_t - 1.6Y_{t-1} + 0.6Y_{t-2} = e_t - 0.4e_{t-1}$
+
+$Y_t = 1.6Y_{t-1} - 0.6Y_{t-2} + e_t - 0.4e_{t-1}$
+
+
+**Another Example** Similar to Problem B
+
+Identify p,d & q for $Y_t = 1.6Y_{t-1} - 0.6Y_{t-2} + e_t - 0.4e_{t-1}$
+
+$AR(2) \rightarrow 1.6, -0.6$  so to determine stationarity, $1.6 + (-0.6) = 1$.  Since this is greater than 1, this process is not stationary.
+
+$Y_t -1.6_{t-1} + 0.6Y_{t-2} = e_t - 0.4e_{t-1}$
+
+$(1 - 1.6\beta + 0.6\beta^2)Y_t$
+
+$(1 - 0.6\beta)(1 - \beta)Y_t = (1 - 0.4\beta)e_t$
+
+So take this equation and let $W_t = Y_t - Y_{t-1}$ and then write the equation as 
+
+$(1 - 0.6\beta)W_t = (1 - 0.4\beta)e_t$
+
+$W_t - 0.6W_{t-1} = (1 - 0.4\beta)e_t$
+
+$W_t = 0.6W_{t-1} + e_t - 0.4e_{t-1}$
+
+$Y_t - Y_{t-1} = 0.6Y_{t-1} - 0.6Y_{t-2} + e_t - 0.4e_{t-1}$
+
+$Y_t = (1 + 0.6)Y_{t-1} - 0.6Y_{t-2} + e_t - 0.4e_{t-1}$
+
+This final equation equals $Y_t = (1 + \phi)Y_{t-1} - \phi Y_{t-2} + e_t - 0.4e_{t-1}$
+
+
+## Maximum Likelihood Estimation (MLE)
+
+  * We will assume our parameters are independent and normally distributed.
+  * Think Bayesian statistics, the values are known and we are estimating the parameter
+
+
+
+**Normal Density Funciton**
+
+$f(x) = \frac{1}{\sqrt{2\pi \sigma^2}} e^{\frac{(x-\mu)^2}{2\sigma^2}}$
+
+### Class Examples
+
+ * color dataset from TSA
+ 
+```{r class_ex}
+
+data(color)
+autoplot(color)
+
+
+```
+
+```{r class_ex2}
+
+arima(color)
+
+```
+
+ARIMA (2,0,0)
+
+```{r class_ex3}
+
+arima(color, order = c(2,0,0), method = "ML")
+
+```
+
+**Another Example**
+
+```{r ex2}
+
+data(ar2.s)
+autoplot(ar2.s)
+
+```
+
+```{r ex2_acf}
+plot(ggAcf(ar2.s))
+
+
+```
+
+```{r ex2_pacf}
+plot(ggPacf(ar2.s))
+
+```
+
+```{r ex2_eacf}
+eacf(ar2.s)
+
+```
+
+```{r ex2_arima}
+arima(ar2.s, order = c(2, 0, 0))
+
+```
+
+**Oil Price Data Example**
+
+```{r ex3}
+data("oil.price")
+autoplot(oil.price)
+
+```
+
+```{r ex3_log}
+autoplot(log(oil.price))
+
+```
+
+```{r ex3_acf}
+plot(ggAcf(oil.price))
+
+```
+
+```{r ex3_pacf}
+plot(ggPacf(oil.price))
+
+```
+
+```{r ex3_eacf}
+eacf(oil.price)
+
+```
+
+Original plot of log(oil.price) doesn't look stationary, look at differencing to achieve stationarity
+
+```{r ex3_difference}
+diff = log(oil.price)[2:241] - log(oil.price)[1:240]
+plot(ggAcf(diff))
+```
+
+```{r ex3_diff_pacf}
+plot(ggPacf(diff))
+
+```
+
+## Modeling Process
+
+What steps do you take to model a given time series?
+
+  * Plot the time series
+  * Look for seasonality, stationarity
+  * Constant Variability (Transformation if non-constant variance)
+  * Look at ACF, PACF and EACF to find p,d,q
+  * Fit the model
+  * Evaluate the estimates and are they significant
+  * Are the residuals normally distributed and independent
+  * And don't forget about the runs test, shapiro-wilkes test for normality, normal probability plots....
+  
+  
+  
+### Color Data Example
+
+```{r oil_example}
+library(TSA)
+data("oil.price")
+plot(oil.price)
+plot(log(oil.price))
+plot(diff(log(oil.price)))
+
+```
+
+
+```{r oil_diagnostics}
+
+acf(diff(log(oil.price)))
+pacf(diff(log(oil.price)))
+eacf(diff(log(oil.price)))
+
+
+```
+
+```{r oil_fit}
+
+ma1_oil = arima(log(oil.price), order = c(0, 1, 1))
+ma1_oil
+
+acf(ma1_oil$residuals)
+pacf(ma1_oil$residuals)
+eacf(ma1_oil$residuals)
+
+```
+
+```{r oil_testing}
+#Possible outliers causing the shapiro test to fail 
+shapiro.test(ma1_oil$residuals)
+hist(ma1_oil$residuals)
+
+#runs test
+runs(ma1_oil$residuals)
+
+# Ljung-Box Test
+tsdiag(ma1_oil)
+
+```
+

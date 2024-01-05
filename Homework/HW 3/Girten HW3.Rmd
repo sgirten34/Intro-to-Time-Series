@@ -1,0 +1,182 @@
+---
+title: "Assignment 3"
+author: "Scott Girten"
+date: "November 2, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE,
+	fig.align = "center"
+)
+```
+
+## Problem 1
+
+### Part A
+
+\[
+\begin{eqnarray}
+Y_t &=& Y_{t-1} - 0.25Y_{t-2} + e_t - 0.1e_{t-1} \\
+Y_t - Y_{t-1} + 0.25Y_{t-2} &=& e_t - 0.1e_{t-1} \\
+(1 - \beta + 0.25\beta^2)Y_t &=& (1 - 0.1\beta)e_t
+\end{eqnarray}
+\]
+
+**Characteristic Polynomials**
+
+$\phi(x) = (1 - x + 0.25x^2)$
+
+$\phi_1 = 1$
+
+$\phi_2 = -0.25$
+
+***
+$\theta(x) = (1 - 0.1x)$
+
+$\theta_1 = -0.1$
+
+I couldn't see an easy way to factor $\phi$ to determine the roots, so I used the polyroot function in base R to calculate the roots.
+
+```{r partA_roots}
+polyroot(z = c(1, -1, .25))
+
+```
+There is a root at 2.  Since this is greater than 1, the process is stationary.  The model would be ARIMA(2, 0, 1).
+
+### Part B
+
+\[
+\begin{eqnarray}
+Y_t &=& 2Y_{t-1} - Y_{t-2} + e_t \\
+Y_t - 2Y_{t-1} + Y_{t-2} &=& e_t \\
+(1 - 2\beta + \beta^2)Y_t &=& e_t \\
+(1 - \beta)^2Y_t &=& e_t
+\end{eqnarray}
+\]
+
+**Characteristic Polynomial**
+
+$\phi(x) = (1 - 2x + x^2)$
+
+$\phi_1(x) = -2$
+
+$\phi_2(x) = 1$
+
+***
+
+$\theta(x) = (1 - (0)x)$
+
+$\theta(x) = 0$
+
+Since the roots for $\phi$ = 1, this process is not stationary.  The factored equation for this series leads to an equation $(1 - \beta)^2Y_t = e_t$, with $\phi$ and $\theta$ not having terms in the equation.  Therefore, differencing will lead to a stationary white noise process, with the model being ARIMA(0, 2, 0).
+
+### Part C
+
+\[
+\begin{eqnarray}
+Y_t &=& 0.5Y_{t-1} - 0.5Y_{t-2} + e_t - 0.5e_{t-1} + 0.25e_{t-2} \\
+Y_t - 0.5Y_{t-1} + 0.5Y_{t-2} &=& e_t - 0.5e_{t-1} + 0.25e_{t-2} \\
+(1 - 0.5\beta + 0.5\beta^2)Y_t &=& (1 - 0.5\beta + 0.25\beta^2)e_t
+\end{eqnarray}
+\]
+
+**Characteristic Polynomial**
+
+$\phi(x) =  (1 - 0.5\beta + 0.5\beta^2)$
+
+$\phi_1 = -0.5$
+
+$\phi_2 = 0.5$
+
+***
+
+$\theta(x) = (1 - 0.5\beta + 0.25\beta^2)$
+
+$\theta_1 = -0.5$
+
+$\theta_2 = 0.25$
+
+```{r partC_roots}
+phi_root = polyroot(z = c(1, -.5, .5))
+theta_root = polyroot(z = c(1, -.5, .25))
+
+phi_root
+phi_root = sqrt(.5^2 + 1.322876^2)
+
+```
+
+The root in modulus for $\phi$ is `r phi_root`, which is greater than 1 and makes this a stationary process.  
+
+```{r}
+theta_root
+theta_root = sqrt(1^2 + 1.732051^2)
+
+```
+
+The roots for $\theta$ is `r theta_root`, which is greater than 1 and makes this an invertible process.  It is an ARIMA(2, 0, 2) model.  
+
+
+## Problem 2
+
+Use the data(color) command and consider which model you think is best.   Look at the acf, pacf, and/or eacf and give the model you think is best.  You should justify your decision using patterns you see in the acf, pacf, and eacf.
+
+```{r prob_2_acf}
+library(TSA)
+library(forecast)
+data(color)
+
+color_acf = ggAcf(color)
+plot(color_acf)
+```
+
+```{r prob_2_pacf}
+
+color_pacf = ggPacf(color)
+plot(color_pacf)
+```
+
+```{r prob_2_eacf}
+
+eacf(color, ar.max = 7, ma.max = 7)
+
+```
+
+**Decision:** The first plot of the ACF looks like the series is slow decay instead of a sharp drop-off.  The second plot of the PACF shows a sharp drop after the first term, suggesting an AR(1) component.  The EACF plot suggests either and MA(1) or AR(1) model.  I would assume this series is an AR(1) model.
+ 
+## Problem 3
+
+Use data(hare) to load the waskily-wabbit data.  This is a count related to abundance of hare in the Hudson Bay area in Canada.  Using a square root transformation, let hare^.5 be your data.  Using the acf, pacf, and/ eacf, what model do you think is most appropriate for this transformed data (and why).   
+
+```{r prob_3_acf}
+data(hare)
+hare_transform = sqrt(hare)
+
+hare_acf = ggAcf(hare_transform)
+plot(hare_acf)
+
+```
+
+```{r prob_3_pacf}
+hare_pacf = ggPacf(hare_transform)
+plot(hare_pacf)
+
+```
+
+```{r prob3_eacf}
+eacf(hare_transform, ar.max = 7, ma.max = 7)
+
+```
+
+**Decision:** The first plot of the ACF shows a slow decay in the MA series.  The second plot of the PACF shows terms 1 & 2 significant and possibly term 3 being significant.  The EACF suggests an AR(2) model.  Relying on the PACF and EACF would assume this model to be an AR(2) model as my first choice and  possibly consider an AR(3) model if the AR(2) model did not perform well.  
+
+
+
+
+
+
+
+***

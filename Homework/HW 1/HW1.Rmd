@@ -1,0 +1,202 @@
+---
+title: 'STA 317 Homework #1'
+author: "Scott Girten"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_fold: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+## Problem 1
+
+Consider two random variables, X and Y.  Suppose $E(X) = 6$, $var(X) = 9$, $E(Y)  = 0$, $var(Y) = 4$ and $corr(X,Y) = 0.25$.  Find the following, showing all your steps:
+
+```{r prob_1}
+covXY = 0.25 * sqrt(9 * 4)
+
+```
+
+### Part A: $Var(X + Y)$
+
+$corr(x,Y) = \frac{cov(x,Y)}{\sqrt{var(X)var(Y)}}$
+
+$cov(X,Y) = corr(X,Y)*\sqrt{var(X)var(Y)}$
+
+$var(X + Y) = Var(X) + Var(Y) + 2cov(X,Y)$
+ 
+$var(X + Y) = Var(X) + Var(Y) +2corr(X,Y)\sqrt{var(X)var(Y)}$
+
+$var(X + Y) = 9 + 4 + 2(`r covXY`)$
+
+$var(X + Y) = `r 9 + 4 + 2*covXY`$
+
+***
+            
+### Part B: $cov(X,X + 2Y)$
+
+$cov(X,X+2Y) = cov(X,X) + cov(X,2Y)$
+
+$cov(X,X+2Y) = Var(X) +2cov(X,Y)$
+
+$cov(X,X+2Y) = 9 + 2(`r covXY`)$
+
+$cov(X,X+2Y) = `r 9 + 2*covXY`$
+
+***
+
+### Part C: $corr(X+Y,X-Y)$
+
+$corr(X+Y,X-Y) = \frac{cov(X+Y, X-Y)}{\sqrt{Var(X+Y)Var(X-Y)}}$
+
+> $cov(X+Y, X-Y) = cov(X,X) - cov(X,Y) + cov(Y,X) - cov(Y,Y)$
+>
+> $cov(X+Y, X-Y) = Var(X) - Var(Y)$
+>
+> $cov(X+Y, X-Y) =  9 - 4 = 5$
+
+> $Var(X+Y)Var(X-Y) =  (Var(X)+Var(Y)+2cov(X,Y))(Var(X)+Var(Y)-2cov(X,Y))$
+>
+> $Var(X+Y)Var(X-Y) = (9+4+2(`r covXY`))(9+4-2(`r covXY`))$
+>
+> $Var(X+Y)Var(X-Y) = `r (9 + 4 + 2*covXY) * (9 + 4 - 2*covXY)`$
+
+$corr(X+Y,X-Y) = \frac{5}{\sqrt{160}}$
+
+$corr(X+Y,X-Y) = `r 5/sqrt(160)`$
+
+***
+
+## Problem 2
+
+Construct a time series plot in R.  Write a brief description of the patterns you see.  For example, do certain months tend to have high $CO_2$ values?  What about lowest values? To assist in your graph, use the following commands to include monthly plotting symbols.
+
+The pattern from the CO2 data shows an increasing channel from the 1960's through the 1990's.
+
+```{r prob_2}
+library(tidyverse)
+library(TSA)
+library(timetk)
+library(gghighlight)
+library(ggfortify)
+
+data(co2)
+co2_data = co2
+#co2_data = timetk::tk_tbl(CO2) %>% 
+#  mutate(Month = lubridate::month(index))
+
+co2_ggplot = ggplot(co2_data, aes(x = index, y = value)) + 
+  geom_point() +
+  geom_line() +
+  scale_x_continuous() + 
+  ggtitle("CO2 Levels") + 
+  xlab("Date") + 
+  ylab("CO2 Levels")
+plot(co2_ggplot)
+#plotly::ggplotly(co2_ggplot)
+
+```
+
+The graph below highlights the months March, April and May as having the highest CO2 levels.
+
+```{r prob_2_high}
+
+co2_ggplot_high = ggplot(co2_data, aes(x = index, y = value)) + 
+  geom_point(color = "orange") +
+  geom_line(color = "orange") +
+  scale_x_continuous() + 
+  ggtitle("Months With High CO2 Levels") + 
+  xlab("Date") + 
+  ylab("CO2 Levels") + 
+  gghighlight(Month %in% c(3, 4, 5))
+plot(co2_ggplot_high)
+```
+
+The graph below highlights the months of August and September as having the lowest CO2 levels.
+           
+```{r prob_2_low_plot}
+
+co2_ggplot_low = ggplot(co2_data, aes(x = index, y = value)) + 
+  geom_point(color = "blue") +
+  geom_line(color = "blue") +
+  scale_x_continuous() + 
+  ggtitle("Months With Low CO2 Levels") + 
+  xlab("Date") + 
+  ylab("CO2 Levels") + 
+  gghighlight(Month %in% c(8, 9))
+plot(co2_ggplot_low)
+
+```
+
+***
+
+## Problem 3
+
+Simulations of white noise processes
+
+### Part A
+
+Simulate and plot a white noise process where $Y_t \approx$ Normal (mean = 0, st.dev. = 1).  These are independent and identically distributed.  
+
+```{r prob_3A}
+
+time_index = (1:100)
+y100n = rnorm(100, 0, 1) # n = 100, mean = 0 and st. dev. = 1
+y100n_df = tibble(time_index, y100n)
+#plot(y100n, ylab = "White Noise Normal 0-1", xlab = "Time")
+
+y100n_plot = ggplot(y100n_df, aes(x = time_index, y = y100n)) +
+  geom_point() +
+  xlab("Time") +
+  ylab("White Noise Normal") +
+  ggtitle("Normal White Noise Process")
+plot(y100n_plot)
+```
+
+
+### Part B
+
+Simulate and plot a white noise process where $Y_t \approx T$ with 1 degree of freedom.  These are independent and identically distributed.  This is the Cauchy distribution, known to produce outliers on occasion.
+
+```{r prob_3B}
+
+y100t = rt(100, 1) # n = 100, t with 1 degree of freedom
+#plot(y100t)
+
+y100t_df = tibble(time_index, y100t)
+
+y100t_plot = ggplot(y100t_df, aes(x = time_index, y = y100t)) +
+  geom_point() + 
+  xlab("Time") + 
+  ylab("White Noise T with 1 df") + 
+  ggtitle("T1 (Cauchy) White Noise Process")
+plot(y100t_plot)
+
+
+```
+
+### Part C
+
+Simulate and plot a white noise process where $Y_t \approx$ Chi-square with 5 degrees of freedom.  These are independent and identically distributed.
+
+```{r prob_3C}
+y100chi = rchisq(100, 5) # n = 100, chi-square with df = 5
+#plot(y100chi)
+
+y100chi_df = tibble(time_index, y100chi)
+
+y100chi_plot = ggplot(y100chi_df, aes(x = time_index, y = y100chi)) +
+  geom_point() + 
+  xlab("Time") + 
+  ylab("White Noise Chi-Square with 5 df") + 
+  ggtitle("Chi-Square (df = 5) White Noise Process")
+plot(y100chi_plot)
+```
+

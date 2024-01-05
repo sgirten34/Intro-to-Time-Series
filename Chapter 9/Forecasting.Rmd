@@ -1,0 +1,140 @@
+---
+title: "Forecasting"
+author: "Scott Girten"
+date: "November 13, 2019"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE,
+	fig.align = "center"
+)
+```
+
+## ARIMA Models
+
+### AR(1) Model Forecasts
+
+**For a zero mean process:**
+$Y_t = \phi Y_{t-1} + e_t$
+
+**For a non-zero mean process:**
+$Y_t - \mu = \phi (Y_{t-1} - \mu) + e_t$
+
+How do you forecast $Y_{t+1}$?
+
+$Y_{t+1} - \mu = \phi (Y_t - \mu) + e_{t+1}$
+
+
+$\hat{Y}_t(1) - \mu = E[\phi (Y_t - \mu) + e_{t+1}]$
+
+Look in the book for deriving the formula, eventually you get:
+
+$\hat{Y}_t(1) = \mu + \phi (Y_t - \mu)$
+
+**Forecast the Mean**
+
+General Formula:
+
+ * Look on page 193 for how to derive the formula (9.36)
+
+$\hat{Y}_t(l) = \mu + \phi^l (Y_t - \mu)$
+
+
+**Forecast the Error**
+
+For one time period ahead:
+
+$e_t(1) = Y_{t+1} - \hat{Y}_t(1)$
+
+$e_t(1) = \phi [Y_t-\mu] + \mu + e_{t+1} - [\phi (Y_t - \mu) + \mu]$
+
+$e_t(1) = e_{t+1} \rightarrow$ is a zero mean, unbiased estimate
+
+Write the error terms as an infinite series:
+
+$e_t(l) = e_{t+l} + \phi e_{t+l-1} + \phi^2 e_{t+l-2} + .... + \phi^{l-1} e_{t+1}$
+
+
+General Formula:
+
+  * remember the errors have a mean of zero
+
+$VAR(e_t(l)) = \sigma^2_e (\frac{1 - \phi ^{2l}}{1-\phi^2})$
+
+### MA(1) Model Forecast
+
+$e_t$ is a zero mean white noise process
+
+$Y_t = \mu + e_t - \theta e_{t-1}$
+
+To forecast for one step ahead $Y_{t+1}$:
+
+$\hat{Y}_t(1) = E[Y_{t+1} \rvert Y_1, ..., Y_t]$
+
+$\hat{Y}_t(1) = E[\mu + e_{t+1} \rvert Y_1, ..., Y_t]$
+
+For the above equation MA(1) $\rightarrow$ AR($\infty$), so $e_t$ can be defined as an infinite series based on the $Y_t$ terms.
+
+**What about $l > 1$?**
+
+$\hat{Y}_t(l)  =  \mu - \theta e_t for l = 1$
+
+$\hat{Y}_t(l)  = \mu for l > 1$
+
+Observations 1 unit apart are correlated, while those more than 1 unit apart are uncorrelated (Hence the cutoff)
+
+Just as in the AR(1) model, $\hat{Y}_t (l) \rightarrow \mu$ as $l \rightarrow \infty$
+
+For forecasting error, the expected value $E(e_{t+1} = 0)$ and is an unbiased estimator for $e_t$
+
+The variance for $e_{t+1} = \sigma_e^2$, which is constant for a stationary process
+
+To estimate the variance:
+
+$Var(e_{t+l} - \theta e_{t+l-1})$
+
+do a little algebra......
+
+$Var(e_{t+1} = \sigma_e^2(1 + \theta^2)$
+
+For $l = 1, var(e_t(l)) = \sigma_e^2$ and for $l > 1, var(e_t(l)) = \sigma_e^2(1+\theta^2)$
+
+## Updating ARIMA Forecasts
+
+In the book, p. 207
+
+**Updating Equation**
+
+$\hat{Y}_{t+1}(l) = \hat{Y}(l+1) + \Phi_l [Y_{t-1} - \hat{Y}_t(l)]$
+
+The idea is not refit the model, but update the model with new information afrom a new observation.
+
+**Example**
+
+p. 194 AR(1) process $ar1 \rightarrow$ .5705 and $\mu \rightarrow$ 74.3293
+
+Forecast 1-step ahead:
+Last $Y$, $Y_{35}$ = 67
+
+$Y_{36}$ Forecast:
+
+$\hat{Y}_t(1) = 74.3293 + 0.5705[67 - 74.3293] \approx 70.14793$
+
+$Y_{37}$ Forecast:
+
+$\hat{Y}_t(2) = 74.3293 + 0.5705[70.14793 - 74.3293] \approx 71.94383$
+
+So then you observe $Y_{36} = 65$.  Update the previous forecast with the new information.
+
+$\hat{Y}_{t+1}(l) = 71.94383 + 0.5705[65 - 70.14793]$ will produce the updated forecast.  You have a predicted value and then an observation of that prediction, so you adjust the observation to the original forecast.
+
+
+
+

@@ -1,0 +1,373 @@
+---
+title: "STA 317 Exam 1"
+author: "Scott Girten"
+date: "October 14, 2019"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE,
+	fig.align = "center"
+)
+```
+
+## Problem 1
+
+*Consider the random variables Y1 and Y2, where E(Y1) = 1, var(Y1) = 9, E(Y2) = 2, var(Y2) = 16, and cov(Y1, Y2) = -2.  Find the following (values), showing all your steps:  (20 points)*
+
+### Part A
+
+\[
+\begin{eqnarray}
+var(Y_1 + Y_2) & = & var(Y_1) + var(Y_2) + 2cov(Y_1, Y_2) \\
+& = & 9 + 16 + 2(-2) \\
+& = & 21
+\end{eqnarray}
+\]
+
+### Part B
+
+\[
+\begin{eqnarray}
+cov(Y_1, 2Y_1 + 3Y_2) & = & cov(Y_1, 2Y_1) + cov(Y_1, 3Y_2) \\
+& = & 2cov(Y_1, Y_1) + 3cov(Y_1, Y_2) \\
+& = & 2var(Y_1) + 3cov(Y_1, Y_2) \\
+& = & 2(9) + 3(-2) \\ 
+& = & 12
+\end{eqnarray}
+\]
+
+### Part C
+
+\[
+\begin{eqnarray}
+corr(2Y_1 + 3Y_2, Y_1 - 2Y_2) & = & \frac{cov(2Y_1 + 3Y_2, Y_1 - 2Y_2)}{\sqrt{var(2Y_1 + 3Y_2)var(Y_1 - 2Y_2)}}
+\end{eqnarray}
+\]
+
+**Numerator**
+
+\[
+\begin{eqnarray}
+cov(2Y_1 + 3Y_2, Y_1 - 2Y_2) & = & cov(2Y_1, Y_1) + cov(2Y_1, -2Y_2) + cov(3Y_2, Y_1) + cov(3Y2, -2Y_2) \\
+& = & 2cov(Y_1, Y_1) + (-4)cov(Y_1, Y_2) + 3cov(Y_2, Y_1) + (-6)cov(Y_2, Y_2) \\
+& = & 2var(Y_1) + (-4)cov(Y_1, Y_2) + 3cov(Y_2, Y_1) + (-6)var(Y_2) \\ 
+& = & 2(9) + (-4)(-2) + 3(-2) + (-6)(16) \\ 
+& = & -76
+\end{eqnarray}
+\]
+
+**Denominator**
+
+\[
+\begin{eqnarray}
+var(2Y_1 + 3Y_2) & = & var(2Y_1) + var(3Y_1) + 2cov(2Y_1, 3Y_2) \\ 
+& = & 4var(Y_1) + 9var(Y_2) + 2(2)(3)cov(Y_1, Y_2) \\ 
+& = & 4(9) + 9(16) + 12(-2) \\ 
+& = & 156
+\end{eqnarray}
+\]
+
+\[
+\begin{eqnarray}
+var(Y_1 - 2Y_2) & = & var(Y_1) + var(-2Y_2) - 2cov(Y_1, -2Y_2) \\
+& = & var(Y_1) + 4var(Y_2) - 2(-2)cov(Y_1, Y_2) \\
+& = & 9 + 4(16) - (-4)(-2) \\ 
+& = & 65
+\end{eqnarray}
+\]
+
+**Put it all together**
+
+\[
+\begin{eqnarray}
+corr(2Y_1 + 3Y_2, Y_1 - 2Y_2) & = & \frac{-76}{\sqrt{(156)(65)}} \\ 
+& = & `r -76/sqrt(156*65)`
+\end{eqnarray}
+\]
+
+## Problem 2
+
+*Let $e_1, e_2, ...$ be a sequence of independent and identically distributed random variables with a mean of 0 and a constant variance $\sigma_e^2$.  Define the time series $Y_t = \frac{2}{3}e_t + \frac{1}{3}e_{t-1}$*
+
+*Find the complete structure of the series by deriving the following components:  You must show work to justify your findings.*
+
+
+### Part A
+
+\[
+\begin{eqnarray}
+E(Y_t) & = & E(\frac{2}{3}e_t) + E(\frac{1}{3}e_{t_1}) \\ 
+& = & \frac{2}{3}E(e_t) + \frac{1}{3}E(e_{t-1}) \\ 
+& = & \frac{2}{3}(0) + \frac{1}{3}(0) \\ 
+& = & 0
+\end{eqnarray}
+\]
+
+### Part B 
+
+\[
+\begin{eqnarray}
+var(Y_t) & = & var(\frac{2}{3}e_t) + var(\frac{1}{3}e_{t-1}) \\ 
+& = & \frac{4}{9}var(e_t) + \frac{1}{9}var(e_{t-1}) \\ 
+& = & \frac{5}{9}\sigma_e^2
+\end{eqnarray}
+\]
+
+### Part C
+
+\[
+\begin{eqnarray}
+cov(Y_t, Y_{t-1}) & = & cov\Big[\Big(\frac{2}{3}e_t + \frac{1}{3}e_{t-1}\Big), \Big(\frac{2}{3}e_{t-1} + \frac{1}{3}e_{t-2}\Big)\Big] \\ 
+& = & cov(\frac{2}{3}e_t, \frac{2}{3}e_{t-1}) + cov(\frac{2}{3}e_t, \frac{1}{3}e_{t-2}) + cov(\frac{1}{3}e_{t-1}, \frac{2}{3}e_{t-1}) + cov(\frac{1}{3}e_{t-1}, \frac{1}{3}e_{t-2}) \\
+& = & 0 + 0 + (\frac{1}{3})(\frac{2}{3})cov(e_{t-1}, e_{t-1}) + 0 \\
+& = & \frac{2}{9}var(e_{t-1}) \\ 
+& = & \frac{2}{9}\sigma_e^2
+\end{eqnarray}
+\]
+
+Since the random variables *e* are independent, the covariance is 0 for different *e* terms.  Only terms with a common *e* will have covariance.
+
+### Part D
+
+\[
+\begin{eqnarray}
+cov(Y_t, Y_{t-2}) & = & cov\Big[\Big(\frac{2}{3}e_t + \frac{1}{3}e_{t-1}\Big), \Big(\frac{2}{3}e_{t-2} + \frac{1}{3}e_{t-3}\Big)\Big] \\ 
+& = & cov\Big(\frac{2}{3}e_t, \frac{2}{3}e_{t-2}\Big) + cov\Big(\frac{2}{3}e_t, \frac{1}{3}e_{t-3}\Big) + cov\Big(\frac{1}{3}e_{t-1}, \frac{2}{3}e_{t-2}\Big) + cov\Big(\frac{1}{3}e_{t-1}, \frac{1}{3}e_{t-3}\Big) \\ 
+& = & 0 + 0 + 0 + 0
+\end{eqnarray}
+\]
+
+For value of $K \geq 2$, the covariance for terms in this times series will be zero since the terms will not share a common term as defined by the series.
+
+### Part E
+
+*Based on your results, is this process (weakly) stationary or not?  Justify your response.*
+
+This process is weakly stationary since the $E(Y_t)$ is constant for the series and the covariance for the series is does not depend on the value of $t$.  The covariance is only dependent on the lag of $k$ and is constant throughout the series.  
+
+
+
+
+
+
+## Problem 3
+
+*Let $e_1, e_2, ...$ be a sequence of independent and identically distributed random variables with a mean of 0 and a constant variance $\sigma_e^2$.  Define the time series $Y_t = e_t - \frac{13}{15}e_{t-1} - \frac{26}{75}e_{t-2} + \frac{8}{25}e_{t-3}$*
+
+### Part A
+
+*Is this process invertible or not?  (Why/Why not?) Justify your answer.*
+
+This process is invertible since the roots of the characteristic equation are greater than $\lvert 1 \rvert$.
+
+\[
+\begin{eqnarray}
+1 - \frac{4}{5}x & = & 0 \\
+\frac{4}{5}x & = & 1 \\
+x & = & \frac{5}{4}
+\end{eqnarray}
+\]
+
+\[
+\begin{eqnarray}
+1 - \frac{2}{3}x & = & 0 \\
+\frac{2}{3}x & = & 1 \\
+x & = & \frac{3}{2}
+\end{eqnarray}
+\]
+
+\[
+\begin{eqnarray}
+1 + \frac{3}{5}x & = & 0 \\
+\frac{3}{5}x & = & -1 \\
+x & = & -\frac{5}{3}
+\end{eqnarray}
+\]
+
+### Part B
+
+*Calculate the autocorrelation function (just the values $\rho 1, \rho 2, \rho 3$ and $\rho 4$).  These are the theoretical values. *
+
+```{r autocorrelation}
+
+denominator = 1 + (13/15)^2 + (26/75)^2 + (-1*8/25)^2
+
+theta1 = 13/15  
+theta2 = 26/75
+theta3 = -1*8/25
+
+rho_1 = (-1*theta1 + theta1*theta2 + theta2*theta3) / denominator
+rho_2 = (-1*theta2 + theta2*theta3) / denominator
+rho_3 = (-1*theta3) / denominator
+rho_4 = 0
+
+```
+
+**Theoretical Values for $\rho 1$ to $\rho 4$**
+
+$\rho 1$ = `r rho_1`
+
+$\rho 2$ = `r rho_2`
+
+$\rho 3$ = `r rho_3`
+
+$\rho 4$ = `r rho_4`
+
+### Part C
+
+*Sketch the correlogram (lags 1-4 only) for this series based on the theoretical values. You can do this by hand on paper or using technology.*
+
+```{r correlogram}
+library(tidyverse)
+
+
+corr_plot = ggplot() + 
+  geom_segment(aes(x = 1, y = 0, xend = 1, yend = rho_1)) + 
+  geom_segment(aes(x = 2, y = 0, xend = 2, yend = rho_2)) + 
+  geom_segment(aes(x = 3, y = 0, xend = 3, yend = rho_3)) + 
+  scale_x_discrete() + 
+  xlim(min = 0, max = 20) + 
+  ylim(min = -0.5, max = 0.5) +
+  geom_hline(yintercept = 0) +
+  xlab("Lag") + 
+  ylab("ACF") + 
+  ggtitle("Correlogram for rho(1) to rho(4)")
+  
+
+plot(corr_plot)
+  
+
+```
+
+
+
+
+## Problem 4
+
+*The data file test1A.dat has a series with 200 data values.  You should save this file – I suggest on your roaming drive.  If my file is on the j: drive in a folder named STA317, then I can read the data into R using yvalues <- scan(“j:/STA317/test1A.dat”).  This will read the values in the variable named yvalues. (30 points)*
+
+### Part A
+
+*First, fit a simple linear model assuming the predictor is a simple time index (x <-1:200). Give the estimated y-intercept and slope values from the linear model fit.*
+
+```{r fit_model}
+#Read data and add index to data frame
+model_data = as.tibble(scan("test1A.dat")) %>% 
+  mutate(index = 1:200)
+
+#Fit the model
+model_fit = lm(value~index, data = model_data)
+model_fit
+
+```
+
+The y-intercept is 14.319 and the slope is 1.501
+
+### Part B
+
+*Use the residuals, or the $X_t$ values from $Y_t = U_t + X_t$ where $U_t$ is the line you fit from part A.  First, create a plot of the residuals.  Does there seem to be a violation of the independence assumption based on this plot?  Why or why not?*
+
+```{r resid_plot}
+#Create residual data frame
+residuals = model_fit$residuals
+index = 1:200
+resid_tibble = tibble(index, residuals)
+
+
+#Residual plot
+resid_plot = ggplot(resid_tibble, aes(x = index, y = residuals)) + 
+  geom_point() + 
+  geom_hline(yintercept = 0) + 
+  xlab("Time Index") + 
+  ylab("Residual Value") + 
+  ggtitle("Residuals Plot")
+
+plot(resid_plot)
+
+
+```
+
+There does not appear to be a violation of the assumption of independence from the residuals.  The residuals form a channel and appear to have a constant variance throughout the channel.
+
+### Part C
+
+```{r runs_plot}
+runs_plot = resid_plot + 
+  geom_line()
+plot(runs_plot)
+
+```
+
+**Output of the Runs Function**
+
+```{r runs_test}
+library(TSA)
+runs_test = runs(residuals)
+runs_test
+```
+
+``` {r z_score}
+numerator = 2 * (runs_test$n1 * runs_test$n2) * (2 * (runs_test$n1 * runs_test$n2) - 200)
+denominator = 200 * 200 * (200 - 1)
+
+sigma_runs =  sqrt(numerator / denominator)
+
+runs_z_score = abs(runs_test$observed.runs - runs_test$expected.runs) / sigma_runs
+
+```
+
+
+$H_o:$ The residuals are independent
+
+$H_a:$ The residuals are not independent
+
+$\alpha = 0.025$
+
+**Z-score:** `r runs_z_score`
+
+**p-value:** `r runs_test$pvalue`
+
+**Summary:**  With a Z-score of `r runs_z_score` and a p-value of `r runs_test$pvalue`, there is not sufficient evidence to reject the assumption of independence.
+
+### Part D
+
+*Complete a normality test on the residuals.*
+```{r resid_hist}
+
+resid_hist = ggplot(resid_tibble, aes(residuals)) + 
+  geom_histogram() + 
+  xlab("Residual Values") + 
+  ggtitle("Histogram of Residuals")
+plot(resid_hist)
+
+```
+
+The histogram of the residuals does not provide evidence to contradict the assumption of normality.
+
+```{r shapiro-wilks}
+shap_wilk_test = shapiro.test(residuals)
+shap_wilk_test
+
+```
+
+**Summary:** With a p-value of `r shap_wilk_test$p.value` from the Shapiro-Wilk Normality Test, there is not sufficient evidence to reject the assumption of normality for the residuals. 
+
+### Part E
+
+*Using the residuals, find an estimate for the standard deviation of the residuals (this is a step in trying to estimate $\sigma_e^2$*
+
+```{r resid_stdev}
+
+resid_stdev = sd(residuals)
+
+```
+
+An estimate for the standard deviation of the residuals is `r resid_stdev`.

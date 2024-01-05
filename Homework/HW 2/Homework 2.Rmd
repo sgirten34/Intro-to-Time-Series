@@ -1,0 +1,229 @@
+---
+title: "Homework 2"
+author: "Scott Girten"
+date: "September 25, 2019"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE,
+	fig.align = "center"
+)
+```
+
+## Problem 1
+
+*The monthly values of the average hourly wages for U.S. apparel and textile workers for July 1981 to June 1987 are in the wages object in the TSA package.  Type library(TSA); data(wages); You may want to type print(wages) in R to see the data set.*
+
+### Part A
+
+*Create a time series plot of the data and discuss any patterns you observe. Include your plot and your discussion.*
+
+```{r part_a}
+library(TSA)
+library(tidyverse)
+library(ggfortify)
+data(wages)
+
+wage_plot = autoplot(wages) + 
+  ylab("Hourly Wages") +
+  theme_bw() + 
+  ggtitle("Average Hourly Wages") + 
+  xlab("Year")
+plot(wage_plot)
+
+
+```
+
+**Patterns:** The data shows a positively increasing trend over time.  There seems to be a small spike in the middle of the year and the last half of the year sees a greater increase in wages relative to the first half of the year in which wages are either flat or up slightly. 
+
+### Part B
+
+*Fit a quadratic trend for this data. You will need the time variable and a squared time variable.  The following code is one way to create a time variable.  Notice you could have a different "0" point, but this code sets 0 as January 1981.  The linear model function can fit a quadratic trend using lm(wages~timewages+timewages2).  Create a plot of the rstudent() residuals.  Based on this plot, what do you think about the independence assumption of the values?  Complete a runs test and write a conclusion (include the test statistic and p-value in your summary sentence). *
+
+
+**Linear Model**
+
+```{r part_b_lmFit}
+
+timewages = 1:72
+for (i in 1:72){
+  timewages[i] = 0.5 + i / 12
+}
+
+timewages2 = timewages * timewages
+
+wages_fit = lm(wages~timewages + timewages2)
+wages_fit
+```
+
+
+
+```{r part_b_resid}
+
+resid = rstudent(wages_fit)
+
+# Create index to make a data frame for plotting
+index = c(1:72)
+resid_tibble = tibble(index, resid)
+
+# Residual plot of studentized residuals
+resid_plot = ggplot(resid_tibble, aes(x = index, y = resid)) + 
+  geom_point() + 
+  theme_bw() + 
+  geom_hline(yintercept = 0, color = "blue") + 
+  ylab("Standardized Residuals") + 
+  xlab("Time Index") + 
+  ggtitle("rstudent() Residuals")
+plot(resid_plot)
+
+
+```
+
+Based on the residual plot, it does not appear that data points are independent.  The residuals do not have a random pattern, which implies that the data points are not independent.
+
+**Runs Test**
+
+```{r runs_plot}
+
+# Runs plot of residuals
+runs_plot = resid_plot + 
+  geom_line()
+plot(runs_plot)
+```
+
+**Output of the runs function**
+
+```{r runs_test}
+
+runs_test = runs(resid)
+runs_test
+```
+
+```{r runs_Z_test}
+# Calculate sigma^2 for the runs test
+numerator = 2 * (runs_test$n1 * runs_test$n2) * (2 * (runs_test$n1 * runs_test$n2) - 72)
+denominator = 72 * 72 * (72 - 1)
+
+sigma_runs = numerator / denominator
+
+runs_z_score = abs(runs_test$observed.runs - runs_test$expected.runs) / sigma_runs
+```
+
+**Z-score:** `r round(runs_z_score, 3)`
+
+**p-value:** `r runs_test$pvalue`
+
+**Summary:** With a Z-score of `r round(runs_z_score, 3)` and a p-value of `r runs_test$pvalue`, there is evidence to conclude that the residuals from the linear model of annual wage data are not independent. 
+
+*Create a histogram of the rstudent() residuals.  What do you think about the normality assumption of the residuals? Complete a Shapiro-Wilks test and write a summary. * 
+
+```{r resid_histogram}
+
+resid_hist = ggplot(resid_tibble, aes(resid)) + 
+  geom_histogram(fill = "white", color = "black") +
+  theme_bw() + 
+  xlab("Standardized Residuals") + 
+  ggtitle("Histogram of Residuals")
+plot(resid_hist)
+
+```
+
+The histogram of the residuals does not provide evidence to contradict the assumption of normality.  The histogram is symmetric and mounded in the center of the distribution, as you would expect with a normal distribution.
+
+**Shapiro-Wilks Test**
+
+```{r normality_test}
+# Shapiro-Wilks normality test
+shap_wilks_test = shapiro.test(resid)
+shap_wilks_test
+
+```
+
+**W:** `r round(shap_wilks_test$statistic, 4)`
+
+**p-value:** `r round(shap_wilks_test$p.value, 4)` 
+
+**Summary:** With a p-value of `r round(shap_wilks_test$p.value, 4)` from the Shapiro-Wilks test, there is not sufficient evidence to conclude that the distribution of the residuals differs from a Normal distribution.
+
+### Part C
+
+*Based on the plot of the rstudent() residuals, what other trend do you suspect might be in the data that has not been included in the model? *
+
+I assume that there is some type of cyclical pattern to the residuals.  The pattern in the residuals appears to be cyclical due to the wave pattern in the residuals.  The original time series plot did display a potential cyclical pattern for every year.  The first half of the year tended to have a smaller increase in wages, with a sharp spike halfway through the year and then the increase in wages for the second half of the year rise at a faster rate than wages did for the first half of the year.  Based on the plot of the residuals and the original time series plot, I would assume there is some type of periodic trend in the data.
+
+## Problem 2
+
+*Create a MA(3) process with at least 100 Yt values.  Provide the values you used for the theta terms.  Also, calculate the theoretical values of 1, 2, 3, 4 and 5. Finally, use acf() to create the correlogram.  Do the observed values match what you expected for the correlations at lags 1-5? *
+
+**Theta Terms:**
+
+$\theta_1 = .7$
+
+$\theta_2 = .4$
+
+$\theta_3 = .2$
+
+**Theoretical Values for $\rho_1$ to $\rho_5$**
+
+```{r theoretical_rho_values}
+theta1 = .7
+theta2 = .2
+theta3 = .4
+denominator = (1 + .7^2 + .4^2 + .2^2)
+
+rho_1 = (-1*theta1 + theta1*theta2 + theta2*theta3) / denominator
+rho_2 = (-1*theta2 + theta2*theta3) / denominator
+rho_3 = (-1*theta3) / denominator
+rho_4 = 0
+rho_5 = 0
+
+```
+
+$\rho_1$ = `r rho_1`
+
+$\rho_2$ = `r rho_2`
+
+$\rho_3$ = `r rho_3`
+
+$\rho_4$ = `r rho_4`
+
+$\rho_5$ = `r rho_5`
+
+```{r ma_data}
+# mean = 0 and standard deviation = 1
+e120n = rnorm(120, 0, 1)
+
+# Storage array for the ma3 process
+yt_ma3 = 1:120
+for (i in 1:120){
+  yt_ma3[i] = (e120n[i+3] - theta1*e120n[i+2] - theta2*e120n[i+1] - theta3*e120n[i])
+}
+
+index = c(1:120)
+ma3_data  = tibble(index, yt_ma3) %>% 
+  filter(!is.na(yt_ma3))
+
+ma3_plot = ggplot(ma3_data, aes(x = index, y = yt_ma3)) +
+  geom_point() + 
+  geom_line() + 
+  theme_bw() + 
+  xlab("Time") + 
+  ylab("MA(3)") + 
+  ggtitle("MA(3) Process")
+plot(ma3_plot)
+```
+
+```{r acf_plot}
+acf_plot = acf(ma3_data$yt_ma3)
+
+```
+
+Yes, the observed values do correspond to the theoretical values.  The theoretical values for lags 1-3 were negative with $\theta_1$ and $\theta_2$ being substantially more negative than $\theta_3$, which was close to 0.   

@@ -1,0 +1,92 @@
+---
+title: "Overview"
+author: "Scott Girten"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+## Introduction
+
+Seasonal trends of carbon dioxide from the co2 dataset in the TSA package.  Basic time series plot.
+
+```{r co2_plot}
+#library(ggplot2)
+#library(ggfortify)
+
+co2Data = co2
+#win.graph(width = 3, height = 3, pointsize = 14)
+#plot(co2, type = "o")
+
+ggfortify::autoplot(co2) + xlab("Year") + ylab("CO2 Level")
+
+```
+
+
+Time series plot with a 12 month lag.  It has the effect of removing the seasonality and looking at the difference on a year over year basis.  The trend is increasing temperatures with a strongly correlated pattern.
+
+```{r co2_12month_lag}
+library(forecast)
+
+
+#plot(y=co2Data, x=lag(co2Data, 12), ylab = "CO2 levels", xlab = "Last Year")
+gglagplot(co2Data, lags = 12)
+
+```
+
+
+
+```{r co2_monthly_plot}
+
+#plot(y=co2Data, x=time(co2Data), ylab = "CO2 levels", pch = as.vector(season(co2Data)))
+
+```
+
+
+
+## What is Time Series?
+
+A **time series** is a sequence of ordered data. Usually this is ordered by time, other possibilities exist such as space/location.  Imagine a ranger tracking wildlife in various regions, for example.  
+
+Our focus will be exclusively with time series that are:
+
+  * measured on a single continuous random variable Y
+  * equally spaced in discrete time; that is, we will have a single realization of Y at
+each second, hour, day, month, year, etc. Notice how this differs from a random sample of multiple observations at a fixed time period.  
+
+
+In time series analysis, there are two over-arching goals:  
+
+  *	model the stochastic (random) mechanism that leads to the series  
+  *	predict (forecast) future values of the series based on the observed history   
+  
+The challenge with time series data is that the observations are correlated (not independent).   This makes is more difficult to analyze (in general) as the theory learned previously typically was built around independent observations.  
+
+In a simple linear regression model such as $Y_i = \beta_0 + \beta_1X_i + \epsilon_i$ or an ANOVA model like $Y_{ijk} = \mu +\alpha_i + \beta_j + (\alpha\beta)_{ij} + \epsilon_{ijk}$, the error terms (the $\epsilon$ values) are **independent** and identically distributed (iid) normal random variables with a mean of 0 and a constant (but unknown) variance.  This is not the case in time series data.
+
+The overarching goals in time series analysis can be broken down into the following pieces:
+
+1. Model specification (identify the model)
+    + Consider different classes of time series for a stationary process
+    + Use descriptive statistics, graphs and subject knowledge (talk to experts in the field of study) to make sensible selections
+    + Try to keep models as simple as possible ("Principle of Parsimony")
+  
+2. Model fitting
+    + After choosing a model, estimate the parameters in the model.
+    + Use least squares or maximumn likelihood methods to select "best" parameter estimates 
+  
+3. Model diagnostics
+    + Use inference and graphs to check how well the model you proposed actually fits the data
+    + This might lead to the model specified being adequate and point to other models which may be more appropriate.
+  
+The **time series plot** is very useful.  It is simply a plot of the observations across time, so you plot $Y_t$ (the value of the variable) at each time value *t* = 1, 2, ....., n.  Notice the subscript, or time, is very important in this analysis unlike what may have been discusses in other coursework.  Be sure you give good titles and label axes carefully including units of measurement.

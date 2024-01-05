@@ -1,0 +1,304 @@
+---
+title: "Test 2"
+author: "Scott Girten"
+date: "November 23, 2019"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE,
+	fig.align = "center"
+)
+```
+
+## Problem 1
+
+*The Göta River in Sweden was observed for average annual discharge rates (volume of water in m3/s) between 1807 and 1957.  The data file Gota.txt contains the values.  Read these into R using a start date of 1807.  You do not need to fit any trend or to take any differences for this data.*
+
+```{r read_data}
+library(tidyverse)
+library(forecast)
+library(TSA)
+
+gota_data = read_csv("Gota.txt", col_names = FALSE) %>% 
+  rename(`Discharge Rate` = X1) %>% 
+  mutate(Year = 1807:1956)
+
+gota_plot = ggplot(gota_data, aes(x = Year, y = `Discharge Rate`)) + 
+  geom_point() + 
+  geom_line() + 
+  ggtitle("Gota River Discharge Rate 1807 - 1957") + 
+  ylab("Discharge Rate")
+plot(gota_plot)
+```
+
+
+### Part A
+
+*Create ACF and PACF plots for the data.  Discuss what patterns you see and what models are suggested from these two plots.  (10 points)*
+
+```{r part_1a}
+ggAcf(gota_data$`Discharge Rate`) + 
+  ggtitle("Gota River Data ACF")
+ggPacf(gota_data$`Discharge Rate`) + 
+  ggtitle("Gota River Data PACF")
+```
+
+The ACF of the Gota River Data shows the first lag being significant and the PACF shows the first two lags being significant.  This would suggest and ARMA(2,1) model might be the best model to fit this data.
+
+
+### Part B
+
+*Consider an AR(1) model and an MA(1) model.  Here, the goal is to fit a model where you are limited to a single parameter (other than the process mean - called the "intercept" in arima output).  Fit these two models and discuss which is better based on the results. (10 points)*
+
+```{r part_1b}
+gota_ts = ts(as.numeric(gota_data$`Discharge Rate`), start = c(1807, 1))
+
+gota_ma1 = arima(gota_ts, order = c(0, 0, 1))
+gota_ma1
+
+gota_ar1 = arima(gota_ts, order = c(1, 0, 0))
+gota_ar1
+
+```
+
+
+In both models the intercept and parameter are significant.  The point estimates for both models are similar, however the variance of the MA(1) model is less than the variance of the AR(1) model.  The estimates of the standard error for the intercept and the parameter for the MA(1) model is less than the estimates for the AR(1) model.  Also, the MA(1) model's estimate for $\sigma^2$ is less than the estimate for $\sigma^2$ for the AR(1) model.  The MA(1) model would be a better model to fit since the estimates of the error terms is less than the estimates of the error terms for the AR(1) model leading to a more precise estimate of the model.  
+
+### Part C
+
+*For the better model from part B, use approximate 95% confidence interval to estimate the unknown parameters.  Notice one will be the "process mean" or the average annual discharge rate.  The other is the parameter associated with the AR or the MA component.  Note: R negatives MA parameters, so if an output says theta-hat is 0.6789, then theta is estimated to be -0.6789, or Yt = ??? + et - (-0.6789)et-1 = ??? + et + 0.6789et-1 .  An AR parameter is used as demonstrated in examples from class (no negating).  (10 points)*
+
+
+```{r part_1c}
+# Calculate the confidence interval for the intercept
+lower_int = 535.0331 - (2 * 10.4298)
+upper_int = 535.0331 + (2 * 10.4298)
+intercept_interval = glue::glue("({lower_int}, {upper_int})")
+
+# Calculate the confidence interval for the ma term
+lower_ma = -0.5350 - (2 * 0.0594)
+upper_ma = -0.5350 + (2 * 0.0594)
+ma_interval = glue::glue("({lower_ma}, {upper_ma})")
+```
+
+
+Parameter   |  Point Estimate   | Std. Error  |  95% Confidence Interval
+------------|-------------------|-------------|-------------------------
+Intercept   | 535.0331          | 10.4298     | `r intercept_interval`
+ma1         | 0.5350            | 0.0594      | `r ma_interval `
+
+
+### Part D
+
+*The MOM (Method of Moments) estimate for the parameter is -0.6555.  Does this value lie in the interval from part C for the comparable parameter? Which estimate do you believe is better to use and WHY? (10 points)*
+
+The Method of Moments estimate of -0.6555 for the ma parameter is outside of the 95% Confidence Interval of `r ma_interval` for the fitted MA(1) model.  For MA models, the Method of Moments estimator can produce estimates which have a higher variance than using the Maximum Likelihood Estimate.  Therefore I believe the model I ran using the MLE method produced a better estimate for the MA parameter than did the MoM estimator.  
+
+### Part E
+
+*Forecast the next 2 years of discharge volumes for the Göta River.  Standard errors for the first and second forecasts are $\sqrt{{\hat{\sigma}}_e}$ and $\sqrt{{\hat{\sigma}}_e}\ \left(1+\theta^2\right)$.  Using your output, find the standard errors.  Fill in the table with your values. (You can check work in R, but results may be slightly different because R reports ARIMA output as rounded.  Just be sure values seem close to what you calculate.) (10 points)*
+
+```{r part_1e}
+# Calculate estimates for 1957
+Y_1 = 535.0331 - (0.5350 * (535.0331 - gota_data$`Discharge Rate`[150]))
+stdErr_Y1 = sqrt(6957)
+
+# Calculate estimates for 1958
+Y_2 = 535.0331
+stdErr_Y2 = sqrt(6957) * (1 + 0.5350^2)
+```
+
+Year              | Estimate of $\mu$             | Estimate of Standard Error
+------------------|-------------------------------|---------------------------------------------
+Forecast 1 (1957) | $\hat{Y}_t(1)$ = `r Y_1`      | $\sqrt{\hat{\sigma}_e}$ = `r stdErr_Y1`
+Forecast 2 (1958) | $\hat{Y}_t(2)$ = `r Y_2`      | $\sqrt{\hat{\sigma}_e} (1 + \theta^2)$ = `r stdErr_Y2`
+
+****
+
+## Problem 2
+
+*Bovine blood sugar levels were recorded and placed in the file Cows.txt.  This data consists of daily blood sugar readings for a single cow, measured in mg/100 ml of blood.  (The cow was given 10 mg of dexamethasone intermuscularly in an attempt to increase milk production.)  Fit all models using the method='ML' (ie: maximum likelihood) option in the arima() function. Do not use any differencing for this data. * 
+
+```{r read_data2}
+bovine_data = read_csv("Cows.txt", col_names = FALSE) %>% 
+  rename(`Blood Sugar` = X1) %>% 
+  mutate(Day = 1:length(`Blood Sugar`))
+
+bovine_plot = ggplot(bovine_data, aes(x = Day, y = `Blood Sugar`)) + 
+  geom_point() + 
+  geom_line() + 
+  ggtitle("Daily Blood Sugar Reading") + 
+  ylab("Blood Sugar (mg/100ml)")
+plot(bovine_plot)
+    
+
+```
+
+
+### Part A
+
+*Use BoxCox.ar() to determine if a transformation is needed.  Include your graph showing that the log likelihood suggests (which option): (5 points)*
+
+No transformation is needed since the interval is nearly centered at 1.
+
+```{r part_2a}
+
+BoxCox.ar(bovine_data$`Blood Sugar`)
+
+```
+
+### Part B
+
+*Looking at the EACF, what model would you fit? Fit this ARIMA(p,d,q) model. Save the results so you can fill in a table in part C.  (5 points)*
+
+The EACF suggests an ARIMA(1, 0, 1) model.
+```{r part_2b}
+
+eacf(bovine_data$`Blood Sugar`)
+
+# Fit ARIMA(1, 0, 1) model with Maximum Likelihood method
+bovine_101 = arima(bovine_data$`Blood Sugar`, order =  c(1, 0, 1), method = "ML")
+bovine_101
+
+```
+
+### Part C
+
+*Overfit the model using both an ARIMA(p+1,d,q) and ARIMA(p,d,q+1) option.  For each model, identify the estimated parameter values and standard errors to complete the table below.  Circle or highlight any which are NOT significant. Based on the results, which model seems most appropriate? (15 points)*
+
+```{r part_2c}
+library(sweep)
+library(kableExtra)
+#Over-fitted models
+bovine_201 = arima(bovine_data$`Blood Sugar`, order =  c(2, 0, 1), method = "ML")
+bovine_102 = arima(bovine_data$`Blood Sugar`, order =  c(1, 0, 2), method = "ML")
+
+# Get term and estimate values
+tidy_bovine_101 = sw_tidy(bovine_101)
+tidy_bovine_201 = sw_tidy(bovine_201)
+tidy_bovine_102 = sw_tidy(bovine_102)
+
+# Get error values - hardcode from model.  Can't find a way to programatically get the error terms
+bovine_101_error = c(0.0622, 0.0677, 1.6040)
+bovine_201_error = c(0.1422, 0.1321, 0.1234, 1.577)
+bovine_102_error = c(0.0938, 0.1171, 0.1150, 1.5815)
+
+#create columns
+model = tibble(Model = c(rep("ARIMA(1,0,1)", 3), rep("ARIMA(2,0,1)", 4), rep("ARIMA(1,0,2)", 4)))
+tidy_bovine_all = bind_rows(tidy_bovine_101, tidy_bovine_201, tidy_bovine_102)
+error = tibble(`Standard Error` = c(bovine_101_error, bovine_201_error, bovine_102_error))
+
+# Create the table
+tidy_bovine_table = bind_cols(model, tidy_bovine_all, error) %>% 
+  rename(Term = term, `Parameter Estimate` = estimate)
+
+# Highlight the insignificant terms
+tidy_bovine_table[5, 3] = cell_spec(tidy_bovine_table[5, 3], "html", color = "red")
+tidy_bovine_table[10, 3] = cell_spec(tidy_bovine_table[10, 3], "html", color = "red")
+
+tidy_bovine_table %>% 
+  kable(escape = F) %>% 
+  kable_styling(full_width = FALSE) %>% 
+  collapse_rows(columns = 1, valign = "top")
+
+
+```
+
+Since both of the over fit models have terms which are insignificant, the ARIMA(1,0,1) seems to be the most appropriate model.
+
+### Part D
+
+*For your chosen model from part C, obtain the residuals.  If you used cowmodel<-arima() in fitting the model, then cowmodel%residuals can be used to access the residuals.  Complete a test to determine if the residuals appear to follow a normal distribution.  Also determine if the independence assumption appears to be met for the residuals.  (10 points) *
+
+**Test for Normality**
+
+```{r part_2d}
+library(timetk)
+# Create table of residuals
+index = 1:length(bovine_data$`Blood Sugar`)
+residuals = bovine_101$residuals
+resid_table = tibble(index, residuals)
+
+resid_hist = ggplot(resid_table, aes(x = residuals)) + 
+  geom_histogram()+
+  ggtitle("Histogram of the ARIMA(1,0,1) Residuals")
+plot(resid_hist)
+
+resid_qq_plot = ggplot(resid_table, aes(sample = residuals)) + 
+  geom_qq() + 
+  geom_qq_line() + 
+  ggtitle("QQ Plot of ARIMA(1,0,1) Residuals")
+plot(resid_qq_plot)
+```
+
+```{r normality_test}
+shap_wilks_test = shapiro.test(residuals)
+shap_wilks_test
+```
+
+**Test for Independence**
+
+```{r test_ind}
+# Plot of residuals
+resid_plot = ggplot(resid_table, aes(x = index, y = residuals)) + 
+  geom_point() + 
+  geom_line() + 
+  ggtitle("Plot of Residuals vs. Time")
+plot(resid_plot)
+```
+
+Runs Test:
+
+```{r runs_test}
+runs_test = runs(bovine_101$residuals)
+runs_test
+```
+
+**Summary:** The histogram of the residuals is roughly centered at 0 and symmetric and the qq-plot does not provide evidence that the residuals are not normally distributed.  The p-value of `r round(shap_wilks_test$p.value, 4)` for the Shapiro-Wilk Normality Test also does not provide evidence to violate the assumption of normality.  The runs test has a p-value of `r runs_test$pvalue` which provides evidence to support the assumption of independece among the residuals.
+
+### Part E
+
+*Provide the forecast for the next week of readings, that is provide 7 forecast blood sugar levels for the cow.  Give the actual value and provide a plot showing the blood sugar level from day 150 using n1=150 in the plot command.  (10 points)*
+
+```{r part_2e}
+library(forecast)
+# Create forecast and plot last 25 days plus the forecast
+bovine_101_forecast = forecast(auto.arima(bovine_data$`Blood Sugar`), h = 7, level = 95)
+autoplot(bovine_101_forecast, include = 33) + 
+  ggtitle("7 Day Forecast for Bovine Blood Sugar Levels") + 
+  ylab("Blood Sugar mg/100ml") + 
+  xlab("Day")
+
+# Create table from forecast model to show the exact values for the forecast
+tidy_forecast = sw_sweep(bovine_101_forecast)
+
+forecast_table = tidy_forecast %>% 
+  filter(index > 176) %>% 
+  mutate(`Days Ahead` = 1:7) %>% 
+  rename(Average = value, `Lower 95% CI` = lo.95, `Upper 95% CI` = hi.95) %>% 
+  select(-c(key, index)) %>% 
+  select(`Days Ahead`, everything())
+
+forecast_table %>% 
+  kable() %>% 
+  kable_styling(full_width = FALSE, bootstrap_options = "striped")
+
+```
+
+
+### Part F
+
+*If we followed the forecast "for a really long time", what would the eventual forecast become?  Give the result based on your model output from part B.  (5 points)*
+
+The very long range forecast for this model would be the mean value of the process, which is `r tidy_bovine_101$estimate[3]`.  
+
+
+****

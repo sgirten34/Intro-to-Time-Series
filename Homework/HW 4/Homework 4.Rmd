@@ -1,0 +1,162 @@
+---
+title: "Homework 4"
+author: "Scott Girten"
+date: "November 12, 2019"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE,
+	fig.align = "center"
+)
+```
+
+*Consider elevation levels for Lake Huron collected since 1880.  Read the data file into a time series variable (vector) with start=1880.  *
+
+### Part A
+
+*Plot the data (include your plot).  Notice there is some movement in the data, but overall it does not seem to need differencing or transformations, so work with this original data.*
+
+
+```{r part_a}
+library(tidyverse)
+library(forecast)
+library(TSA)
+
+huron_data = read_lines("Huron2.txt")
+
+huron_data = as.tibble(huron_data) %>% 
+  mutate(Year = as.Date(c(1880:2006), origin = "01/01/1880")) %>% 
+  rename(Elevation = value)
+
+huron_plot = ggplot(huron_data, aes(x = Year, y = as.numeric(Elevation))) + 
+  geom_point() +
+  geom_line() + 
+  scale_y_continuous() +
+  ggtitle("Elevation Levels of Lake Huron 1880-2006") + 
+  ylab("Elevation Level")
+plot(huron_plot)
+```
+
+### Part B
+
+*What ARIMA(p,d=0,q) should be fit?  Be sure to supply graphs/tables/etc. to support your decision.*
+
+```{r part_b}
+
+huron_acf = ggAcf(huron_data$Year) + 
+  ggtitle("Huron Data ACF")
+plot(huron_acf)
+```
+
+```{r part_b_pacf}
+huron_pacf = ggPacf(huron_data$Year) + 
+  ggtitle("Huron Data PACF")
+plot(huron_pacf)
+
+```
+
+```{r part_b_eacf}
+huron_ts = ts(as.numeric(huron_data$Elevation), start = c(1880, 1))
+eacf(huron_ts)
+```
+
+
+```{r part_b_fit}
+huron_fit = arima(huron_ts, order = c(1, 0, 0))
+huron_fit
+
+```
+
+```{r}
+huron_fit2 = arima(huron_ts, order = c(1, 0, 1))
+huron_fit2
+```
+
+```{r}
+huron_fit3 = arima(huron_ts, order = c(2, 0, 1))
+huron_fit3
+```
+
+```{r}
+huron_fit4 = arima(huron_ts, order = c(1, 0, 2))
+huron_fit4
+```
+
+
+**Decision:** I would fit an ARIMA(1, 0 ,1) model for the huron data.  The ACF appears to show a slow decay and my initial thoughts were the MA component is 0.  The PACF shows the first lag being significant and then drops after the first lag and I was still thinking a (1, 0, 0) model.  However, the EACF suggests a (1, 0, 1) model would be appropriate.  I fit 3 models to try to determine which model would produce the best estimate with the fewest number of terms.  The ARIMA(2, 0, 1) model showed the ar1 term to be insignificant, so I excluded the (2, 0, 1) from consideration.  The (1, 0, 1) model did show both terms being significant, although the ma1 term is on the borderline of being significant.  The (1, 0, 0) model showed the ar1 term to be significant.  The deciding factor for me was the slight reduction in the estimate of $\sigma^2$ for the (1, 0, 1) model.  Since all of the terms for the (1, 0, 1) model are significant and there is slight reduction in $\sigma^2$ versus the (1, 0, 0) model, I decided the (1, 0, 1) model would be the most appropriate fit.  
+
+To confirm an ARIMA(1, 0, 1) is the correct model, I fitted a (1, 0, 2) and found that both MA terms were not significant in this model.  Overfitting the (1, 0, 1) model produced results with insignificant terms which supports the decision that the ARIMA(1, 0, 1) is correct.
+
+### Part C
+
+*Check the residuals from your fit suggested in part B.  Do they seem to follow a normal distribution and do they seem to be independent?*
+
+```{r resid_fit}
+library(gridExtra)
+resid = rstandard(huron_fit2)
+index = c(1880:2006)
+
+# Dataframe to plot residuals
+resid_df = tibble(index, resid)
+
+# Plot of standardized residuals
+resid_plot = ggplot(resid_df, aes(x = index, y = resid)) + 
+  geom_point() + 
+  geom_hline(yintercept = 0, color = "blue") + 
+  ylab("Standardized Residuals") + 
+  xlab("Time") 
+plot(resid_plot)
+
+hist_plot = ggplot(resid_df, aes(x = resid)) + 
+  geom_histogram() +
+  xlab("Standardized Residuals")
+plot(hist_plot)
+#grid.arrange(resid_plot, hist_plot, ncol = 2)
+
+qq_plot = ggplot(resid_df, aes(sample = resid)) +
+  geom_qq() +
+  geom_qq_line()
+plot(qq_plot)
+
+
+```
+
+The scatterplot of the residuals vs. time shows a constant variance throughout the series.  The histogram and the qqplot both support the assumption of normality for the residuals.  The residuals seem to be idependent and normally distributed.
+
+### Part D
+
+*Another way to check for missed patterns is to investigate the ACF of the residuals.  Does the ACF suggest a pattern among the sample correlations of the residuals?  If so, this is a problem and the model is incorrect. If not, the model's residuals are again behaving like normally distributed, independent values. *
+
+```{r resid_acf}
+ggAcf(resid) +
+  ggtitle("ACF of Residuals")
+```
+
+The ACF of the residuals does not appear to suggest a pattern among the residuals
+
+### Part E
+
+*Next, consider the overfitting methods to test model adequacy.  Does overfitting support your original model, or does this approach reveal additional terms for the model?*
+
+I didn't have the forethought to read all the questions when starting this homework assignment, so I did the overfitting of the model in Part B.
+
+### Part F
+
+*Lastly, check the adequacy of the ARIMA model using the Ljung-Box test and the tsdiag output. *
+
+```{r ljbox_test}
+Box.test(residuals(huron_fit2), lag = 10, type = "Ljung-Box", fitdf = 1)
+tsdiag(huron_fit2)
+
+```
+
+
+The Ljung-Box test has a p-value of 0.6436 and the plot of the p-values does not provide any evidence that the grouped error terms are uncorrelated.
